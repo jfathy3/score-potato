@@ -592,21 +592,43 @@
                 gameCard.id = `game-card-${game.id}`;
                 gameCard.className = `bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-md overflow-hidden transition-all duration-200`;
 
+                // Calculate top performer by GameScore for each team
+                const getTopPerformer = (players) => {
+                    if (!players || players.length === 0) return null;
+                    return [...players].sort((a, b) => b.gmSc - a.gmSc)[0];
+                };
+
+                const awayTop = getTopPerformer(game.awayTeam.players);
+                const homeTop = getTopPerformer(game.homeTeam.players);
+
                 gameCard.innerHTML = `
                     <div onclick="toggleGameCard('${game.id}')" class="p-4 sm:p-5 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 cursor-pointer transition flex items-center justify-between select-none">
                         
-                        <div class="w-full grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-6 max-w-4xl mx-auto">
+                        <div class="w-full flex items-center justify-between gap-2 sm:gap-4 max-w-6xl mx-auto">
                             
-                            <div class="flex items-center justify-end gap-2 sm:gap-3 text-right">
-                                <div class="hidden sm:block">
-                                    <span class="text-sm sm:text-base font-bold text-slate-900 dark:text-white block leading-tight">${game.awayTeam.name}</span>
+                            <!-- 1. Away Top Performer Badge (Fixed Width Slot) -->
+                            <div class="hidden lg:flex w-36 flex-shrink-0 items-center justify-start">
+                                ${awayTop ? `
+                                    <div class="w-full flex flex-col items-start px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 h-[58px] justify-between shadow-sm">
+                                        <span class="text-[9px] text-slate-400 font-semibold uppercase tracking-wider leading-none">TOP PERFORMER</span>
+                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate w-32 leading-normal py-0.5" title="${awayTop.name}">${awayTop.name}</span>
+                                        <span class="text-[11px] font-extrabold font-mono text-emerald-600 dark:text-emerald-400 leading-none">${awayTop.pts}p / ${awayTop.reb}r / ${awayTop.ast}a</span>
+                                    </div>
+                                ` : ''}
+                            </div>
+
+                            <!-- 2. Away Team Column -->
+                            <div class="flex-1 flex items-center justify-end gap-2 sm:gap-3 text-right">
+                                <div class="hidden sm:block text-right">
+                                    <span class="text-sm sm:text-base font-bold text-slate-900 dark:text-white block leading-tight truncate max-w-[150px] sm:max-w-[180px]">${game.awayTeam.name}</span>
                                     <span class="text-xs text-slate-500 dark:text-slate-400 font-mono">${game.awayTeam.abbrev} ${game.awayTeam.record ? `(${game.awayTeam.record})` : ''}</span>
                                 </div>
                                 <span class="sm:hidden font-bold text-slate-900 dark:text-white text-sm">${game.awayTeam.abbrev}</span>
-                                ${getTeamLogoHtml(game.awayTeam.abbrev, "w-8 h-8 sm:w-10 sm:h-10")}
+                                ${getTeamLogoHtml(game.awayTeam.abbrev, "w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0")}
                             </div>
 
-                            <div class="flex flex-col items-center justify-center px-4 py-1.5 bg-slate-100 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl min-w-[120px]">
+                            <!-- 3. Center Score Box -->
+                            <div class="flex flex-col items-center justify-center px-4 py-1.5 bg-slate-100 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl min-w-[110px] sm:min-w-[130px] flex-shrink-0">
                                 <div class="flex items-center gap-2 sm:gap-3">
                                     <span class="text-xl sm:text-2xl font-extrabold font-mono ${game.awayTeam.score >= game.homeTeam.score ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500'}">${game.awayTeam.score}</span>
                                     <span class="text-slate-400 dark:text-slate-600 font-bold">-</span>
@@ -615,18 +637,30 @@
                                 <span class="text-[10px] font-bold uppercase tracking-wider ${game.status.includes('FINAL') ? 'text-slate-500' : 'text-emerald-600 dark:text-emerald-400 animate-pulse'} font-mono">${game.status}</span>
                             </div>
 
-                            <div class="flex items-center justify-start gap-2 sm:gap-3 text-left">
-                                ${getTeamLogoHtml(game.homeTeam.abbrev, "w-8 h-8 sm:w-10 sm:h-10")}
-                                <div class="hidden sm:block">
-                                    <span class="text-sm sm:text-base font-bold text-slate-900 dark:text-white block leading-tight">${game.homeTeam.name}</span>
+                            <!-- 4. Home Team Column -->
+                            <div class="flex-1 flex items-center justify-start gap-2 sm:gap-3 text-left">
+                                ${getTeamLogoHtml(game.homeTeam.abbrev, "w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0")}
+                                <div class="hidden sm:block text-left">
+                                    <span class="text-sm sm:text-base font-bold text-slate-900 dark:text-white block leading-tight truncate max-w-[150px] sm:max-w-[180px]">${game.homeTeam.name}</span>
                                     <span class="text-xs text-slate-500 dark:text-slate-400 font-mono">${game.homeTeam.record ? `(${game.homeTeam.record})` : ''} ${game.homeTeam.abbrev}</span>
                                 </div>
                                 <span class="sm:hidden font-bold text-slate-900 dark:text-white text-sm">${game.homeTeam.abbrev}</span>
                             </div>
 
+                            <!-- 5. Home Top Performer Badge (Fixed Width Slot) -->
+                            <div class="hidden lg:flex w-36 flex-shrink-0 items-center justify-end">
+                                ${homeTop ? `
+                                    <div class="w-full flex flex-col items-start px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 h-[58px] justify-between shadow-sm">
+                                        <span class="text-[9px] text-slate-400 font-semibold uppercase tracking-wider leading-none">TOP PERFORMER</span>
+                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate w-32 leading-normal py-0.5" title="${homeTop.name}">${homeTop.name}</span>
+                                        <span class="text-[11px] font-extrabold font-mono text-emerald-600 dark:text-emerald-400 leading-none">${homeTop.pts}p / ${homeTop.reb}r / ${homeTop.ast}a</span>
+                                    </div>
+                                ` : ''}
+                            </div>
+
                         </div>
 
-                        <div class="text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 ml-2">
+                        <div class="text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 ml-2 flex-shrink-0">
                             <i data-lucide="chevron-down" class="w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}"></i>
                         </div>
                     </div>
