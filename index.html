@@ -633,8 +633,8 @@
 
                     ${isExpanded ? `
                         <div class="border-t border-slate-200 dark:border-slate-800 p-4 sm:p-6 bg-slate-50 dark:bg-slate-950/40 space-y-6">
-                            ${renderTeamBoxTable(game.awayTeam)}
-                            ${renderTeamBoxTable(game.homeTeam)}
+                            ${renderTeamBoxTable(game.awayTeam, game.id)}
+                            ${renderTeamBoxTable(game.homeTeam, game.id)}
                         </div>
                     ` : ''}
                 `;
@@ -645,9 +645,42 @@
             lucide.createIcons();
         }
 
-        function renderTeamBoxTable(team) {
-            // Sort players by GmSc in descending order
-            const sortedPlayers = [...team.players].sort((a, b) => b.gmSc - a.gmSc);
+        // Global sort state per team/game table
+        const tableSortState = {};
+
+        function sortTeamTable(gameId, teamAbbrev, columnKey) {
+            const key = `${gameId}-${teamAbbrev}`;
+            if (!tableSortState[key]) {
+                tableSortState[key] = { column: columnKey, direction: 'desc' };
+            } else {
+                if (tableSortState[key].column === columnKey) {
+                    tableSortState[key].direction = tableSortState[key].direction === 'desc' ? 'asc' : 'desc';
+                } else {
+                    tableSortState[key].column = columnKey;
+                    tableSortState[key].direction = (columnKey === 'name' || columnKey === 'min') ? 'asc' : 'desc';
+                }
+            }
+            renderGames();
+        }
+
+        function renderTeamBoxTable(team, gameId) {
+            const key = `${gameId}-${team.abbrev}`;
+            const sortConfig = tableSortState[key] || { column: 'gmSc', direction: 'desc' };
+
+            const sortedPlayers = [...team.players].sort((a, b) => {
+                let valA = a[sortConfig.column];
+                let valB = b[sortConfig.column];
+
+                if (typeof valA === 'string') {
+                    return sortConfig.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                }
+                return sortConfig.direction === 'asc' ? valA - valB : valB - valA;
+            });
+
+            const getSortIndicator = (colKey) => {
+                if (sortConfig.column !== colKey) return '';
+                return sortConfig.direction === 'desc' ? ' ▼' : ' ▲';
+            };
 
             return `
                 <div>
@@ -657,31 +690,30 @@
                             <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">${team.name} Box Score</h4>
                             ${team.record ? `<span class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">(${team.record})</span>` : ''}
                         </div>
-                        <span class="text-[10px] text-slate-400 font-mono uppercase">Sorted by GmSc</span>
+                        <span class="text-[10px] text-slate-400 font-mono uppercase">Sorted by ${sortConfig.column.toUpperCase()}</span>
                     </div>
 
                     <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm">
                         <table class="w-full text-left text-xs whitespace-nowrap">
                             <thead class="bg-slate-100 dark:bg-slate-950 text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                                 <tr>
-                                    <th class="py-2.5 px-3">Player</th>
-                                    <th class="py-2.5 px-2 text-center">MIN</th>
-                                    <th class="py-2.5 px-2 text-right">PTS</th>
-                                    <th class="py-2.5 px-2 text-right">REB</th>
-                                    <th class="py-2.5 px-2 text-right">AST</th>
-                                    <th class="py-2.5 px-2 text-right">STL</th>
-                                    <th class="py-2.5 px-2 text-right">BLK</th>
-                                    <th class="py-2.5 px-2 text-right">FG</th>
-                                    <th class="py-2.5 px-2 text-right">3PT</th>
-                                    <th class="py-2.5 px-2 text-right">FT</th>
-                                    <th class="py-2.5 px-2 text-right">TO</th>
-                                    <th class="py-2.5 px-2 text-right">+/-</th>
-                                    <th class="py-2.5 px-3 text-right font-bold text-amber-600 dark:text-amber-400">GmSc</th>
+                                    <th onclick="sortTeamTable('${gameId}', '${team.abbrev}', 'name')" class="py-2.5 px-3 cursor-pointer hover:text-indigo-500 transition">Player${getSortIndicator('name')}</th>
+                                    <th onclick="sortTeamTable('${gameId}', '${team.abbrev}', 'min')" class="py-2.5 px-2 text-center cursor-pointer hover:text-indigo-500 transition">MIN${getSortIndicator('min')}</th>
+                                    <th onclick="sortTeamTable('${gameId}', '${team.abbrev}', 'pts')" class="py-2.5 px-2 text-right cursor-pointer hover:text-indigo-500 transition">PTS${getSortIndicator('pts')}</th>
+                                    <th onclick="sortTeamTable('${gameId}', '${team.abbrev}', 'reb')" class="py-2.5 px-2 text-right cursor-pointer hover:text-indigo-500 transition">REB${getSortIndicator('reb')}</th>
+                                    <th onclick="sortTeamTable('${gameId}', '${team.abbrev}', 'ast')" class="py-2.5 px-2 text-right cursor-pointer hover:text-indigo-500 transition">AST${getSortIndicator('ast')}</th>
+                                    <th onclick="sortTeamTable('${gameId}', '${team.abbrev}', 'stl')" class="py-2.5 px-2 text-right cursor-pointer hover:text-indigo-500 transition">STL${getSortIndicator('stl')}</th>
+                                    <th onclick="sortTeamTable('${gameId}', '${team.abbrev}', 'blk')" class="py-2.5 px-2 text-right cursor-pointer hover:text-indigo-500 transition">BLK${getSortIndicator('blk')}</th>
+                                    <th onclick="sortTeamTable('${gameId}', '${team.abbrev}', 'fgm')" class="py-2.5 px-2 text-right cursor-pointer hover:text-indigo-500 transition">FG${getSortIndicator('fgm')}</th>
+                                    <th onclick="sortTeamTable('${gameId}', '${team.abbrev}', 'tpm')" class="py-2.5 px-2 text-right cursor-pointer hover:text-indigo-500 transition">3PT${getSortIndicator('tpm')}</th>
+                                    <th onclick="sortTeamTable('${gameId}', '${team.abbrev}', 'ftm')" class="py-2.5 px-2 text-right cursor-pointer hover:text-indigo-500 transition">FT${getSortIndicator('ftm')}</th>
+                                    <th onclick="sortTeamTable('${gameId}', '${team.abbrev}', 'tov')" class="py-2.5 px-2 text-right cursor-pointer hover:text-indigo-500 transition">TO${getSortIndicator('tov')}</th>
+                                    <th onclick="sortTeamTable('${gameId}', '${team.abbrev}', 'plusMinus')" class="py-2.5 px-2 text-right cursor-pointer hover:text-indigo-500 transition">+/-${getSortIndicator('plusMinus')}</th>
+                                    <th onclick="sortTeamTable('${gameId}', '${team.abbrev}', 'gmSc')" class="py-2.5 px-3 text-right font-bold text-amber-600 dark:text-amber-400 cursor-pointer hover:text-indigo-500 transition">GmSc${getSortIndicator('gmSc')}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100 dark:divide-slate-800/40 font-mono text-slate-700 dark:text-slate-300">
                                 ${sortedPlayers.map((p, idx) => {
-                                    // High-contrast neon-glow highlights for Dark Mode and vivid tints for Light Mode
                                     let gmScClass = "text-amber-700 dark:text-amber-400 font-bold";
                                     let rowBgClass = idx % 2 === 0 ? "bg-white dark:bg-slate-900" : "bg-slate-100/80 dark:bg-slate-950/70";
 
