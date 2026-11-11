@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScorePotato — Continuous NBA Box Scores</title>
+    <title>ScorePotato</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -206,25 +206,21 @@
         const state = {
             selectedDate: getTodayNYString(),
             games: [],
-            expandedGames: new Set(), // Games collapsed by default
-            isLeaderboardExpanded: false, // Leaders & Laggards collapsed by default
+            expandedGames: new Set(),
+            isLeaderboardExpanded: false,
             loading: false
         };
 
-        // Helper: Get Today's date in America/New_York (US Eastern)
         function getTodayNYString() {
             const now = new Date();
-            const nyDateString = new Intl.DateTimeFormat('en-CA', {
+            return new Intl.DateTimeFormat('en-CA', {
                 timeZone: 'America/New_York',
                 year: 'numeric',
                 month: '2-digit',
                 day: '2-digit'
             }).format(now);
-            return nyDateString;
         }
 
-        // Helper: Calculate Game Score
-        // Formula: PTS + 0.4*FGM - 0.7*FGA - 0.4*(FTA - FTM) + 0.7*OREB + 0.3*DREB + STL + 0.7*AST + 0.7*BLK - 0.4*PF - TOV
         function calculateGameScore(stats) {
             const pts = stats.pts || 0;
             const fgm = stats.fgm || 0;
@@ -243,7 +239,6 @@
             return Math.round(gmSc * 10) / 10;
         }
 
-        // Clean SVG Logo Component Helper with Text Fallback
         function getTeamLogoHtml(teamAbbrev, sizeClasses = "w-7 h-7") {
             const logoUrl = `https://a.espncdn.com/i/teamlogos/nba/500/${teamAbbrev.toLowerCase()}.png`;
             return `
@@ -254,7 +249,6 @@
             `;
         }
 
-        // Initialize App
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             setupEventListeners();
@@ -262,7 +256,6 @@
         });
 
         function setupEventListeners() {
-            // Date Picker
             const datePicker = document.getElementById('date-picker');
             datePicker.value = state.selectedDate;
             datePicker.addEventListener('change', (e) => {
@@ -272,7 +265,6 @@
                 }
             });
 
-            // Quick Date Buttons
             document.getElementById('btn-today').addEventListener('click', () => {
                 state.selectedDate = getTodayNYString();
                 datePicker.value = state.selectedDate;
@@ -303,7 +295,6 @@
                 fetchSlateData(state.selectedDate);
             });
 
-            // Toggle Expand/Collapse All Box Scores
             document.getElementById('btn-toggle-all-games').addEventListener('click', () => {
                 if (state.expandedGames.size === state.games.length) {
                     state.expandedGames.clear();
@@ -313,7 +304,6 @@
                 renderGames();
             });
 
-            // Toggle Leaders & Laggards Accordion
             document.getElementById('btn-toggle-leaderboard').addEventListener('click', () => {
                 state.isLeaderboardExpanded = !state.isLeaderboardExpanded;
                 updateLeaderboardVisibility();
@@ -332,20 +322,29 @@
             }
         }
 
-        // Fetch Slate Box Scores (Using ESPN Public Endpoint with local fallback demo generator)
         async function fetchSlateData(dateStr) {
             state.loading = true;
             renderLoadingState();
 
             const formattedDate = dateStr.replace(/-/g, '');
-            const espnUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${formattedDate}`;
+            const espnUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=`; // Summary endpoint per event OR scoreboard
+            const scoreboardUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${formattedDate}`;
 
             try {
-                const res = await fetch(espnUrl);
+                const res = await fetch(scoreboardUrl);
                 const data = await res.json();
                 
-                if (data && data.events) {
-                    state.games = parseEspnData(data.events);
+                if (data && data.events && data.events.length > 0) {
+                    // Fetch full box scores for each event asynchronously
+                    state.games = await Promise.all(data.events.map(async (evt) => {
+                        try {
+                            const summaryRes = await fetch(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${evt.id}`);
+                            const summaryData = await summaryRes.json();
+                            return parseEspnSummaryData(evt, summaryData);
+                        } catch (e) {
+                            return parseEspnScoreboardEvent(evt);
+                        }
+                    }));
                 } else {
                     state.games = generateMockGames(dateStr);
                 }
@@ -427,9 +426,6 @@
         function renderTopPerformers() {
             const allPlayers = [];
             state.games.forEach(g => {
-                const homeRecord = g.homeTeam.record || '';
-                const awayRecord = g.awayTeam.record || '';
-                
                 g.awayTeam.players.forEach(p => {
                     allPlayers.push({ ...p, team: g.awayTeam.abbrev, gameStatus: g.status });
                 });
@@ -438,14 +434,12 @@
                 });
             });
 
-            // Sort by Game Score descending
             allPlayers.sort((a, b) => b.gmSc - a.gmSc);
 
-            // Top 10
             const top10 = allPlayers.slice(0, 10);
             const topTbody = document.getElementById('top-performers-tbody');
             topTbody.innerHTML = top10.map((p, i) => `
-                <tr class="hover:bg-slate-850/50 transition">
+                <tr class="${i % 2 === 0 ? 'bg-slate-900/40' : 'bg-slate-950/40'} hover:bg-slate-800/80 transition">
                     <td class="py-1.5 px-2 font-mono text-slate-500">${i + 1}</td>
                     <td class="py-1.5 px-2 font-medium text-white flex items-center gap-1.5">
                         ${getTeamLogoHtml(p.team, "w-3.5 h-3.5")}
@@ -459,14 +453,13 @@
                 </tr>
             `).join('');
 
-            // Bottom 10 (Filter for min 15 minutes played to prevent 0-minute clutter)
             const eligibleBottom = allPlayers.filter(p => (p.min || 0) >= 15);
             eligibleBottom.sort((a, b) => a.gmSc - b.gmSc);
 
             const bottom10 = eligibleBottom.slice(0, 10);
             const bottomTbody = document.getElementById('bottom-performers-tbody');
             bottomTbody.innerHTML = bottom10.map((p, i) => `
-                <tr class="hover:bg-slate-850/50 transition">
+                <tr class="${i % 2 === 0 ? 'bg-slate-900/40' : 'bg-slate-950/40'} hover:bg-slate-800/80 transition">
                     <td class="py-1.5 px-2 font-mono text-slate-500">${i + 1}</td>
                     <td class="py-1.5 px-2 font-medium text-white flex items-center gap-1.5">
                         ${getTeamLogoHtml(p.team, "w-3.5 h-3.5")}
@@ -506,13 +499,10 @@
                 gameCard.className = `bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden transition-all duration-200`;
 
                 gameCard.innerHTML = `
-                    <!-- Game Score Header Banner (Click to Expand/Collapse) -->
                     <div onclick="toggleGameCard('${game.id}')" class="p-4 sm:p-5 bg-slate-900 hover:bg-slate-850 cursor-pointer transition flex items-center justify-between select-none">
                         
-                        <!-- Fixed 3-Column Grid Layout for Perfect Alignment Across Cards -->
                         <div class="w-full grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-6 max-w-4xl mx-auto">
                             
-                            <!-- Away Team Column (Right Aligned to Center Score) -->
                             <div class="flex items-center justify-end gap-2 sm:gap-3 text-right">
                                 <div class="hidden sm:block">
                                     <span class="text-sm sm:text-base font-bold text-white block leading-tight">${game.awayTeam.name}</span>
@@ -522,7 +512,6 @@
                                 ${getTeamLogoHtml(game.awayTeam.abbrev, "w-8 h-8 sm:w-10 sm:h-10")}
                             </div>
 
-                            <!-- Central Score Box -->
                             <div class="flex flex-col items-center justify-center px-4 py-1.5 bg-slate-950/80 border border-slate-800 rounded-xl min-w-[120px]">
                                 <div class="flex items-center gap-2 sm:gap-3">
                                     <span class="text-xl sm:text-2xl font-extrabold font-mono ${game.awayTeam.score >= game.homeTeam.score ? 'text-amber-400' : 'text-slate-400'}">${game.awayTeam.score}</span>
@@ -532,7 +521,6 @@
                                 <span class="text-[10px] font-bold uppercase tracking-wider ${game.status.includes('FINAL') ? 'text-slate-500' : 'text-emerald-400 animate-pulse'} font-mono">${game.status}</span>
                             </div>
 
-                            <!-- Home Team Column (Left Aligned from Center Score) -->
                             <div class="flex items-center justify-start gap-2 sm:gap-3 text-left">
                                 ${getTeamLogoHtml(game.homeTeam.abbrev, "w-8 h-8 sm:w-10 sm:h-10")}
                                 <div class="hidden sm:block">
@@ -544,13 +532,11 @@
 
                         </div>
 
-                        <!-- Chevron Toggle Icon -->
                         <div class="text-slate-500 hover:text-slate-300 ml-2">
                             <i data-lucide="chevron-down" class="w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}"></i>
                         </div>
                     </div>
 
-                    <!-- Collapsible Full Box Score Tables -->
                     ${isExpanded ? `
                         <div class="border-t border-slate-800 p-4 sm:p-6 bg-slate-950/40 space-y-6">
                             ${renderTeamBoxTable(game.awayTeam)}
@@ -577,7 +563,6 @@
         function renderTeamBoxTable(team) {
             return `
                 <div>
-                    <!-- Team Table Header -->
                     <div class="flex items-center justify-between mb-2 px-1">
                         <div class="flex items-center gap-2">
                             ${getTeamLogoHtml(team.abbrev, "w-5 h-5")}
@@ -587,8 +572,7 @@
                         <span class="text-[10px] text-slate-500 font-mono uppercase">Sortable Stats</span>
                     </div>
 
-                    <!-- Table -->
-                    <div class="overflow-x-auto border border-slate-800 rounded-xl bg-slate-900">
+                    <div class="overflow-x-auto border border-slate-800 rounded-xl bg-slate-900 shadow-inner">
                         <table class="w-full text-left text-xs whitespace-nowrap">
                             <thead class="bg-slate-950 text-[10px] uppercase font-semibold text-slate-400 border-b border-slate-800">
                                 <tr>
@@ -607,9 +591,9 @@
                                     <th class="py-2.5 px-3 text-right font-bold text-amber-400">GmSc</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-800/60 font-mono text-slate-300">
-                                ${team.players.map(p => `
-                                    <tr class="hover:bg-slate-850/60 transition">
+                            <tbody class="divide-y divide-slate-800/40 font-mono text-slate-300">
+                                ${team.players.map((p, idx) => `
+                                    <tr class="${idx % 2 === 0 ? 'bg-slate-900/50' : 'bg-slate-950/30'} hover:bg-slate-800/80 transition-colors duration-150">
                                         <td class="py-2 px-3 font-sans font-medium text-white">${p.name}</td>
                                         <td class="py-2 px-2 text-center text-slate-400">${p.min}'</td>
                                         <td class="py-2 px-2 text-right font-bold text-white">${p.pts}</td>
@@ -636,81 +620,136 @@
             `;
         }
 
-        // ESPN API Response Parser
-        function parseEspnData(events) {
-            return events.map(evt => {
-                const competition = evt.competitions[0];
-                const home = competition.competitors.find(c => c.homeAway === 'home');
-                const away = competition.competitors.find(c => c.homeAway === 'away');
+        function parseEspnSummaryData(evt, summary) {
+            const competition = evt.competitions[0];
+            const home = competition.competitors.find(c => c.homeAway === 'home');
+            const away = competition.competitors.find(c => c.homeAway === 'away');
+            const statusText = evt.status.type.shortDetail || evt.status.type.detail || 'FINAL';
 
-                const statusText = evt.status.type.shortDetail || evt.status.type.detail || 'FINAL';
+            let awayPlayers = [];
+            let homePlayers = [];
 
-                return {
-                    id: evt.id,
-                    status: statusText.toUpperCase(),
-                    awayTeam: {
-                        name: away.team.displayName,
-                        abbrev: away.team.abbreviation,
-                        score: parseInt(away.score || 0),
-                        record: away.records && away.records[0] ? away.records[0].summary : '',
-                        players: extractEspnPlayers(away)
-                    },
-                    homeTeam: {
-                        name: home.team.displayName,
-                        abbrev: home.team.abbreviation,
-                        score: parseInt(home.score || 0),
-                        record: home.records && home.records[0] ? home.records[0].summary : '',
-                        players: extractEspnPlayers(home)
+            if (summary && summary.boxscore && summary.boxscore.players) {
+                summary.boxscore.players.forEach(teamGroup => {
+                    const isHome = teamGroup.team.id === home.team.id;
+                    const extracted = parseEspnBoxscoreGroup(teamGroup);
+                    if (isHome) {
+                        homePlayers = extracted;
+                    } else {
+                        awayPlayers = extracted;
                     }
-                };
-            });
+                });
+            }
+
+            // Fallback if summary boxscore array was empty
+            if (awayPlayers.length === 0) awayPlayers = generateMockPlayers(away.team.abbreviation);
+            if (homePlayers.length === 0) homePlayers = generateMockPlayers(home.team.abbreviation);
+
+            return {
+                id: evt.id,
+                status: statusText.toUpperCase(),
+                awayTeam: {
+                    name: away.team.displayName,
+                    abbrev: away.team.abbreviation,
+                    score: parseInt(away.score || 0),
+                    record: away.records && away.records[0] ? away.records[0].summary : '',
+                    players: awayPlayers
+                },
+                homeTeam: {
+                    name: home.team.displayName,
+                    abbrev: home.team.abbreviation,
+                    score: parseInt(home.score || 0),
+                    record: home.records && home.records[0] ? home.records[0].summary : '',
+                    players: homePlayers
+                }
+            };
         }
 
-        function extractEspnPlayers(competitor) {
-            if (!competitor.athletes) return generateMockPlayers(competitor.team.abbreviation);
+        function parseEspnBoxscoreGroup(teamGroup) {
+            const players = [];
+            if (!teamGroup.statistics || !teamGroup.statistics[0]) return players;
 
-            return competitor.athletes.map(a => {
-                const statsMap = {};
-                if (a.stats) {
-                    // ESPN stats array mapping
-                    a.stats.forEach((val, idx) => {
-                        statsMap[idx] = val;
-                    });
-                }
+            const statLabels = teamGroup.statistics[0].names;
+            const idxMin = statLabels.indexOf('MIN');
+            const idxPts = statLabels.indexOf('PTS');
+            const idxReb = statLabels.indexOf('REB');
+            const idxAst = statLabels.indexOf('AST');
+            const idxStl = statLabels.indexOf('STL');
+            const idxBlk = statLabels.indexOf('BLK');
+            const idxFg = statLabels.indexOf('FG');
+            const idx3pt = statLabels.indexOf('3PT');
+            const idxFt = statLabels.indexOf('FT');
+            const idxTov = statLabels.indexOf('TO');
+            const idxPm = statLabels.indexOf('+/-');
+            const idxOreb = statLabels.indexOf('OREB');
+            const idxDreb = statLabels.indexOf('DREB');
+            const idxPf = statLabels.indexOf('PF');
 
-                const pts = parseInt(a.stats ? a.stats[13] || 0 : 0);
-                const reb = parseInt(a.stats ? a.stats[7] || 0 : 0);
-                const ast = parseInt(a.stats ? a.stats[8] || 0 : 0);
-                const stl = parseInt(a.stats ? a.stats[9] || 0 : 0);
-                const blk = parseInt(a.stats ? a.stats[10] || 0 : 0);
-                const min = parseInt(a.stats ? a.stats[0] || 0 : 0);
+            teamGroup.statistics[0].athletes.forEach(ath => {
+                if (!ath.stats || ath.didNotPlay) return;
 
-                const fgParts = (a.stats ? a.stats[1] || '0-0' : '0-0').split('-');
+                const name = ath.athlete.shortName || ath.athlete.displayName;
+                const min = parseInt(ath.stats[idxMin] || 0);
+                const pts = parseInt(ath.stats[idxPts] || 0);
+                const reb = parseInt(ath.stats[idxReb] || 0);
+                const ast = parseInt(ath.stats[idxAst] || 0);
+                const stl = parseInt(ath.stats[idxStl] || 0);
+                const blk = parseInt(ath.stats[idxBlk] || 0);
+
+                const fgParts = (ath.stats[idxFg] || '0-0').split('-');
                 const fgm = parseInt(fgParts[0]) || 0;
                 const fga = parseInt(fgParts[1]) || 0;
 
-                const tpParts = (a.stats ? a.stats[2] || '0-0' : '0-0').split('-');
+                const tpParts = (ath.stats[idx3pt] || '0-0').split('-');
                 const tpm = parseInt(tpParts[0]) || 0;
                 const tpa = parseInt(tpParts[1]) || 0;
 
-                const ftParts = (a.stats ? a.stats[3] || '0-0' : '0-0').split('-');
+                const ftParts = (ath.stats[idxFt] || '0-0').split('-');
                 const ftm = parseInt(ftParts[0]) || 0;
                 const fta = parseInt(ftParts[1]) || 0;
 
-                const tov = parseInt(a.stats ? a.stats[11] || 0 : 0);
-                const pf = parseInt(a.stats ? a.stats[12] || 0 : 0);
-                const plusMinus = parseInt(a.stats ? a.stats[14] || 0 : 0);
+                const tov = parseInt(ath.stats[idxTov] || 0);
+                const plusMinus = parseInt(ath.stats[idxPm] || 0);
+                const oreb = parseInt(ath.stats[idxOreb] || Math.round(reb * 0.3));
+                const dreb = parseInt(ath.stats[idxDreb] || Math.round(reb * 0.7));
+                const pf = parseInt(ath.stats[idxPf] || 0);
 
-                const gmSc = calculateGameScore({ pts, fgm, fga, ftm, fta, oreb: Math.round(reb*0.3), dreb: Math.round(reb*0.7), stl, ast, blk, pf, tov });
+                const gmSc = calculateGameScore({ pts, fgm, fga, ftm, fta, oreb, dreb, stl, ast, blk, pf, tov });
 
-                return {
-                    name: a.athlete.shortName || a.athlete.displayName,
-                    min, pts, reb, ast, stl, blk, fgm, fga, tpm, tpa, ftm, fta, tov, pf, plusMinus, gmSc
-                };
+                players.push({
+                    name, min, pts, reb, ast, stl, blk, fgm, fga, tpm, tpa, ftm, fta, tov, pf, plusMinus, gmSc
+                });
             });
+
+            return players;
         }
 
-        // Mock Data Fallback Generator
+        function parseEspnScoreboardEvent(evt) {
+            const competition = evt.competitions[0];
+            const home = competition.competitors.find(c => c.homeAway === 'home');
+            const away = competition.competitors.find(c => c.homeAway === 'away');
+            const statusText = evt.status.type.shortDetail || evt.status.type.detail || 'FINAL';
+
+            return {
+                id: evt.id,
+                status: statusText.toUpperCase(),
+                awayTeam: {
+                    name: away.team.displayName,
+                    abbrev: away.team.abbreviation,
+                    score: parseInt(away.score || 0),
+                    record: away.records && away.records[0] ? away.records[0].summary : '',
+                    players: generateMockPlayers(away.team.abbreviation)
+                },
+                homeTeam: {
+                    name: home.team.displayName,
+                    abbrev: home.team.abbreviation,
+                    score: parseInt(home.score || 0),
+                    record: home.records && home.records[0] ? home.records[0].summary : '',
+                    players: generateMockPlayers(home.team.abbreviation)
+                }
+            };
+        }
+
         function generateMockGames(dateStr) {
             const matchups = [
                 { away: { name: 'Milwaukee Bucks', abbrev: 'MIL', record: '1-10' }, home: { name: 'New York Knicks', abbrev: 'NY', record: '6-4' }, awayScore: 85, homeScore: 117, status: 'FINAL' },
@@ -737,27 +776,37 @@
         }
 
         function generateMockPlayers(teamCode) {
-            const names = [
-                "J. Tatum", "J. Brown", "D. White", "J. Holiday", "A. Horford",
-                "P. Pritchard", "S. Hauser", "L. Kornet", "X. Tillman", "O. Brissett"
-            ];
+            const rosterPools = {
+                'MIL': ["G. Antetokounmpo", "D. Lillard", "K. Middleton", "B. Lopez", "B. Portis"],
+                'NY': ["J. Brunson", "K. Towns", "O. Anunoby", "M. Bridges", "J. Hart"],
+                'BOS': ["J. Tatum", "J. Brown", "D. White", "J. Holiday", "A. Horford"],
+                'PHI': ["J. Embiid", "P. George", "T. Maxey", "K. Oubre Jr.", "C. Martin"],
+                'LAC': ["J. Harden", "K. Leonard", "I. Zubac", "N. Powell", "T. Mann"],
+                'PHX': ["K. Durant", "D. Booker", "B. Beal", "J. Nurkic", "T. Jones"],
+                'MIA': ["J. Butler", "B. Adebayo", "T. Herro", "T. Rozier", "N. Jovic"],
+                'UTAH': ["L. Markkanen", "J. Clarkson", "C. Sexton", "J. Collins", "K. George"],
+                'GSW': ["S. Curry", "D. Green", "A. Wiggins", "J. Kuminga", "B. Hield"],
+                'DEN': ["N. Jokic", "J. Murray", "A. Gordon", "M. Porter Jr.", "R. Westbrook"]
+            };
+
+            const names = rosterPools[teamCode] || ["Player A", "Player B", "Player C", "Player D", "Player E", "Player F", "Player G"];
 
             return names.map((name, i) => {
-                const min = i < 5 ? 30 + Math.floor(Math.random() * 8) : 10 + Math.floor(Math.random() * 12);
-                const pts = i === 0 ? 32 : i === 1 ? 24 : Math.floor(Math.random() * 15);
-                const reb = Math.floor(Math.random() * 10);
-                const ast = Math.floor(Math.random() * 8);
+                const min = i < 5 ? 28 + Math.floor(Math.random() * 8) : 12 + Math.floor(Math.random() * 10);
+                const pts = i === 0 ? 28 + Math.floor(Math.random() * 10) : i === 1 ? 18 + Math.floor(Math.random() * 8) : Math.floor(Math.random() * 12);
+                const reb = Math.floor(Math.random() * 8);
+                const ast = Math.floor(Math.random() * 6);
                 const stl = Math.floor(Math.random() * 3);
                 const blk = Math.floor(Math.random() * 2);
                 const fgm = Math.floor(pts / 2.2);
                 const fga = fgm + Math.floor(Math.random() * 5);
                 const tpm = Math.floor(Math.random() * 4);
                 const tpa = tpm + Math.floor(Math.random() * 3);
-                const ftm = Math.floor(Math.random() * 6);
+                const ftm = Math.floor(Math.random() * 5);
                 const fta = ftm + Math.floor(Math.random() * 2);
                 const tov = Math.floor(Math.random() * 4);
                 const pf = Math.floor(Math.random() * 4);
-                const plusMinus = Math.floor(Math.random() * 26) - 13;
+                const plusMinus = Math.floor(Math.random() * 24) - 12;
 
                 const gmSc = calculateGameScore({ pts, fgm, fga, ftm, fta, oreb: 2, dreb: reb, stl, ast, blk, pf, tov });
 
