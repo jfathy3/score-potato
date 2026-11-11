@@ -284,8 +284,45 @@
             setupTheme();
             lucide.createIcons();
             setupEventListeners();
-            fetchSlateData(state.selectedDate);
+            // Automatically initialize with smart recent date with games
+            initSmartDefaultDate();
         });
+
+        // Smart initialization: defaults to today if games are live/final, otherwise finds most recent past date with games
+        async function initSmartDefaultDate() {
+            const todayStr = getTodayNYString();
+            state.selectedDate = todayStr;
+            document.getElementById('date-picker').value = state.selectedDate;
+
+            // First check today
+            await fetchSlateData(state.selectedDate, true);
+
+            // If today has 0 games or all games are strictly scheduled (none live or final), check yesterday
+            const hasActiveOrFinishedGames = state.games.some(g => !g.status.includes('ET') && !g.status.includes('PM') && !g.status.includes('AM') && !g.status.includes('SCHEDULED'));
+            
+            if (state.games.length === 0 || !hasActiveOrFinishedGames) {
+                // Check up to 3 days back for recent action
+                let checkDate = new Date(todayStr + 'T12:00:00');
+                for (let i = 1; i <= 3; i++) {
+                    checkDate.setDate(checkDate.getDate() - 1);
+                    const pastDateStr = checkDate.toISOString().split('T')[0];
+                    
+                    const pastFormatted = pastDateStr.replace(/-/g, '');
+                    try {
+                        const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${pastFormatted}`);
+                        const data = await res.json();
+                        if (data && data.events && data.events.length > 0) {
+                            state.selectedDate = pastDateStr;
+                            document.getElementById('date-picker').value = state.selectedDate;
+                            await fetchSlateData(state.selectedDate, false);
+                            break;
+                        }
+                    } catch (e) {
+                        // continue checking
+                    }
+                }
+            }
+        }
 
         function setupEventListeners() {
             const datePicker = document.getElementById('date-picker');
