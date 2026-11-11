@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ScorePotato</title>
+    <!-- Favicon Links for Browser Tab -->
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -50,9 +53,7 @@
             
             <!-- Brand & Subtitle -->
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
-                    <i data-lucide="activity" class="w-6 h-6 text-white"></i>
-                </div>
+                <img src="logo.png" alt="ScorePotato Logo" class="w-10 h-10 rounded-xl object-cover border border-slate-200 dark:border-slate-800 shadow-md shadow-orange-500/10" onerror="this.onerror=null; this.parentNode.innerHTML='<div class=\'w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-500 to-indigo-600 flex items-center justify-center text-white font-black text-xs\'>SP</div>';" />
                 <div>
                     <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
                         ScorePotato
