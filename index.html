@@ -142,15 +142,36 @@
                 <div class="bg-indigo-50/70 dark:bg-slate-950/80 border border-indigo-100 dark:border-slate-800 rounded-xl p-3.5 text-xs text-slate-600 dark:text-slate-400">
                     <div class="flex items-center gap-2 font-bold text-indigo-900 dark:text-indigo-300 mb-1">
                         <i data-lucide="calculator" class="w-4 h-4 text-indigo-500"></i>
-                        <span>GameScore (GmSc) Formula & Leaderboard Rules</span>
+                        <span>GameScore (GmSc) Tiers & Performance Levels</span>
                     </div>
-                    <p class="mb-2 leading-relaxed">
+                    <p class="mb-2.5 leading-relaxed">
                         <strong class="text-slate-800 dark:text-slate-200">Formula:</strong> <code class="font-mono bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400">PTS + 0.4×FGM - 0.7×FGA - 0.4×(FTA - FTM) + 0.7×OREB + 0.3×DREB + STL + 0.7×AST + 0.7×BLK - 0.4×PF - TOV</code>
                     </p>
-                    <div class="flex flex-wrap items-center gap-4 text-[11px]">
-                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> <strong>25+ GmSc:</strong> Elite Performance</span>
-                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> <strong>&lt; 0 GmSc:</strong> Rough Game</span>
-                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span> <strong>Bottom 10 Requirement:</strong> Minimum 15 Minutes Played</span>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 text-[11px] font-medium">
+                        <div class="p-1.5 rounded bg-emerald-300/40 dark:bg-emerald-950/80 border border-emerald-400/50 flex flex-col items-center text-center">
+                            <span class="font-bold text-emerald-950 dark:text-emerald-200">40+</span>
+                            <span class="text-[9.5px] opacity-80 leading-tight">Historic</span>
+                        </div>
+                        <div class="p-1.5 rounded bg-emerald-200/50 dark:bg-emerald-900/50 border border-emerald-300/40 flex flex-col items-center text-center">
+                            <span class="font-bold text-emerald-900 dark:text-emerald-300">30–40</span>
+                            <span class="text-[9.5px] opacity-80 leading-tight">Superstar</span>
+                        </div>
+                        <div class="p-1.5 rounded bg-emerald-100 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex flex-col items-center text-center">
+                            <span class="font-bold text-emerald-800 dark:text-emerald-400">20–30</span>
+                            <span class="text-[9.5px] opacity-80 leading-tight">Excellent</span>
+                        </div>
+                        <div class="p-1.5 rounded bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-slate-800 flex flex-col items-center text-center">
+                            <span class="font-bold text-emerald-700 dark:text-emerald-500">10–20</span>
+                            <span class="text-[9.5px] opacity-80 leading-tight">Solid / Average</span>
+                        </div>
+                        <div class="p-1.5 rounded bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-slate-800 flex flex-col items-center text-center">
+                            <span class="font-bold text-rose-700 dark:text-rose-400">0–10</span>
+                            <span class="text-[9.5px] opacity-80 leading-tight">Below Avg</span>
+                        </div>
+                        <div class="p-1.5 rounded bg-rose-200/80 dark:bg-rose-950/80 border border-rose-400/50 flex flex-col items-center text-center">
+                            <span class="font-bold text-rose-950 dark:text-rose-200">&lt; 0</span>
+                            <span class="text-[9.5px] opacity-80 leading-tight">Rough Night</span>
+                        </div>
                     </div>
                 </div>
 
@@ -455,22 +476,22 @@
 
             state.games.forEach(game => {
                 const chip = document.createElement('button');
-                chip.className = `flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-950/80 hover:bg-slate-800 hover:border-indigo-500/50 transition cursor-pointer flex-shrink-0 text-xs shadow-sm`;
+                chip.className = `flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950/80 hover:bg-slate-200 dark:hover:bg-slate-800 hover:border-indigo-500/50 transition cursor-pointer flex-shrink-0 text-xs shadow-sm`;
                 chip.onclick = () => scrollToGame(game.id);
 
                 chip.innerHTML = `
                     <div class="flex items-center gap-1.5">
                         ${getTeamLogoHtml(game.awayTeam.abbrev, "w-4 h-4")}
-                        <span class="font-semibold text-slate-300">${game.awayTeam.abbrev}</span>
-                        <span class="font-bold text-slate-100">${game.awayTeam.score}</span>
+                        <span class="font-semibold text-slate-700 dark:text-slate-300">${game.awayTeam.abbrev}</span>
+                        <span class="font-bold text-slate-900 dark:text-slate-100">${game.awayTeam.score}</span>
                     </div>
-                    <span class="text-slate-600 font-bold">@</span>
+                    <span class="text-slate-400 dark:text-slate-600 font-bold">@</span>
                     <div class="flex items-center gap-1.5">
-                        <span class="font-bold text-slate-100">${game.homeTeam.score}</span>
-                        <span class="font-semibold text-slate-300">${game.homeTeam.abbrev}</span>
+                        <span class="font-bold text-slate-900 dark:text-slate-100">${game.homeTeam.score}</span>
+                        <span class="font-semibold text-slate-700 dark:text-slate-300">${game.homeTeam.abbrev}</span>
                         ${getTeamLogoHtml(game.homeTeam.abbrev, "w-4 h-4")}
                     </div>
-                    <span class="ml-1 text-[10px] px-1.5 py-0.5 rounded font-mono ${game.status.includes('FINAL') ? 'bg-slate-800 text-slate-400' : 'bg-amber-500/20 text-amber-400 font-bold'}">${game.status}</span>
+                    <span class="ml-1 text-[10px] px-1.5 py-0.5 rounded font-mono ${game.status.includes('FINAL') ? 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400' : 'bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold'}">${game.status}</span>
                 `;
 
                 strip.appendChild(chip);
@@ -751,22 +772,33 @@
                             </thead>
                             <tbody class="divide-y divide-slate-100 dark:divide-slate-800/40 font-mono text-slate-700 dark:text-slate-300">
                                 ${sortedPlayers.map((p, idx) => {
-                                    let gmScClass = "text-amber-700 dark:text-amber-400 font-bold";
-                                    let rowBgClass = idx % 2 === 0 ? "bg-white dark:bg-slate-900" : "bg-slate-100/80 dark:bg-slate-950/70";
+                                    let gmScClass = "text-slate-700 dark:text-slate-300 font-bold";
+                                    let rowBgClass = idx % 2 === 0 ? "bg-white dark:bg-slate-900" : "bg-slate-50 dark:bg-slate-950/70";
 
-                                    if (p.gmSc >= 25) {
-                                        gmScClass = "text-emerald-950 dark:text-emerald-200 font-black text-sm drop-shadow";
-                                        rowBgClass = "bg-emerald-200/90 dark:bg-emerald-950 dark:border-l-4 dark:border-l-emerald-400 dark:ring-1 dark:ring-emerald-500/50 shadow-inner";
-                                    } else if (p.gmSc >= 18) {
-                                        gmScClass = "text-emerald-900 dark:text-emerald-300 font-extrabold";
-                                        rowBgClass = "bg-emerald-100 dark:bg-emerald-950/70 dark:border-l-4 dark:border-l-emerald-500";
-                                    } else if (p.gmSc <= 2) {
-                                        gmScClass = "text-rose-900 dark:text-rose-200 font-extrabold";
-                                        if (p.gmSc < 0) {
-                                            rowBgClass = "bg-rose-200/90 dark:bg-rose-950 dark:border-l-4 dark:border-l-rose-400 dark:ring-1 dark:ring-rose-500/50 shadow-inner";
-                                        } else {
-                                            rowBgClass = "bg-rose-100 dark:bg-rose-950/70 dark:border-l-4 dark:border-l-rose-500";
-                                        }
+                                    if (p.gmSc >= 40) {
+                                        // 40+ Historic Performance
+                                        gmScClass = "text-emerald-950 dark:text-emerald-100 font-black text-sm drop-shadow";
+                                        rowBgClass = "bg-emerald-300/90 dark:bg-emerald-950 border-l-4 border-l-amber-400 dark:border-l-amber-400 shadow-inner";
+                                    } else if (p.gmSc >= 30) {
+                                        // 30-40 Outstanding / Superstar
+                                        gmScClass = "text-emerald-900 dark:text-emerald-200 font-black text-xs";
+                                        rowBgClass = "bg-emerald-200/80 dark:bg-emerald-950/80 border-l-4 border-l-emerald-500 dark:border-l-emerald-400";
+                                    } else if (p.gmSc >= 20) {
+                                        // 20-30 Excellent
+                                        gmScClass = "text-emerald-800 dark:text-emerald-300 font-extrabold";
+                                        rowBgClass = "bg-emerald-100/70 dark:bg-emerald-950/50 border-l-4 border-l-emerald-400/70 dark:border-l-emerald-500/70";
+                                    } else if (p.gmSc >= 10) {
+                                        // 10-20 Solid / Average Starter
+                                        gmScClass = "text-emerald-700 dark:text-emerald-400 font-bold";
+                                        rowBgClass = "bg-emerald-50/50 dark:bg-emerald-950/20";
+                                    } else if (p.gmSc >= 0) {
+                                        // 0-10 Below Average
+                                        gmScClass = "text-rose-700 dark:text-rose-400 font-bold";
+                                        rowBgClass = "bg-rose-50/40 dark:bg-rose-950/20";
+                                    } else {
+                                        // Negative (<0) Rough Game
+                                        gmScClass = "text-rose-950 dark:text-rose-200 font-black";
+                                        rowBgClass = "bg-rose-200/80 dark:bg-rose-950/80 border-l-4 border-l-rose-500 dark:border-l-rose-400 shadow-inner";
                                     }
 
                                     return `
