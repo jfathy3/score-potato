@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NBA All-in-One Daily Box Score Dashboard</title>
+    <title>ScorePotato — Continuous NBA Box Scores</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -25,1399 +25,745 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-        }
+        /* Custom scrollbar styling */
         ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+            width: 8px;
+            height: 8px;
         }
-        /* Dark Theme Scrollbar */
-        .dark ::-webkit-scrollbar-track {
+        ::-webkit-scrollbar-track {
             background: #0f172a;
         }
-        .dark ::-webkit-scrollbar-thumb {
+        ::-webkit-scrollbar-thumb {
             background: #334155;
             border-radius: 4px;
         }
-        /* Light Theme Scrollbar */
-        html:not(.dark) ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        html:not(.dark) ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-
-        /* --- Dark Mode Tier Highlights --- */
-        .dark .tier-elite {
-            background-color: rgba(6, 78, 59, 0.45) !important;
-            border-left: 4px solid #10b981;
-        }
-        .dark .tier-elite:hover {
-            background-color: rgba(6, 78, 59, 0.65) !important;
-        }
-        .dark .tier-good {
-            background-color: rgba(6, 95, 70, 0.25) !important;
-            border-left: 4px solid #34d399;
-        }
-        .dark .tier-good:hover {
-            background-color: rgba(6, 95, 70, 0.4) !important;
-        }
-        .dark .tier-average {
-            background-color: rgba(30, 41, 59, 0.5) !important;
-            border-left: 4px solid #64748b;
-        }
-        .dark .tier-average:hover {
-            background-color: rgba(51, 65, 85, 0.7) !important;
-        }
-        .dark .tier-below {
-            background-color: rgba(120, 53, 15, 0.25) !important;
-            border-left: 4px solid #fbbf24;
-        }
-        .dark .tier-below:hover {
-            background-color: rgba(120, 53, 15, 0.4) !important;
-        }
-        .dark .tier-poor {
-            background-color: rgba(127, 29, 29, 0.35) !important;
-            border-left: 4px solid #ef4444;
-        }
-        .dark .tier-poor:hover {
-            background-color: rgba(127, 29, 29, 0.55) !important;
-        }
-
-        /* --- Light Mode Tier Highlights --- */
-        html:not(.dark) .tier-elite {
-            background-color: rgba(209, 250, 229, 0.9) !important;
-            border-left: 4px solid #059669;
-            color: #064e3b;
-        }
-        html:not(.dark) .tier-elite:hover {
-            background-color: rgba(167, 243, 208, 0.95) !important;
-        }
-        html:not(.dark) .tier-good {
-            background-color: rgba(236, 253, 245, 0.8) !important;
-            border-left: 4px solid #10b981;
-            color: #065f46;
-        }
-        html:not(.dark) .tier-good:hover {
-            background-color: rgba(209, 250, 229, 0.9) !important;
-        }
-        html:not(.dark) .tier-average {
-            background-color: rgba(248, 250, 252, 0.9) !important;
-            border-left: 4px solid #94a3b8;
-            color: #1e293b;
-        }
-        html:not(.dark) .tier-average:hover {
-            background-color: rgba(241, 245, 249, 1) !important;
-        }
-        html:not(.dark) .tier-below {
-            background-color: rgba(254, 243, 199, 0.7) !important;
-            border-left: 4px solid #f59e0b;
-            color: #78350f;
-        }
-        html:not(.dark) .tier-below:hover {
-            background-color: rgba(253, 230, 138, 0.85) !important;
-        }
-        html:not(.dark) .tier-poor {
-            background-color: rgba(254, 226, 226, 0.75) !important;
-            border-left: 4px solid #ef4444;
-            color: #7f1d1d;
-        }
-        html:not(.dark) .tier-poor:hover {
-            background-color: rgba(254, 202, 202, 0.9) !important;
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
         }
     </style>
 </head>
-<body class="bg-slate-900 dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen antialiased flex flex-col selection:bg-indigo-500 selection:text-white transition-colors duration-200">
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-indigo-500 selection:text-white">
 
-    <!-- Top Header Navigation -->
-    <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur border-b border-slate-200 dark:border-slate-800 shadow-md">
-        <div class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                
-                <!-- Brand Title & Mode Status -->
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="bg-gradient-to-tr from-amber-500 to-indigo-600 p-2.5 rounded-xl shadow-lg shadow-indigo-500/10">
-                            <i data-lucide="activity" class="w-6 h-6 text-white"></i>
-                        </div>
-                        <div>
-                            <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-                                NBA BoxScore Stream
-                                <span class="text-xs bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-medium px-2 py-0.5 rounded-full border border-indigo-500/30">All-in-One</span>
-                            </h1>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">No-click continuous player performance feed</p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center gap-2 md:hidden">
-                        <button id="theme-toggle-mobile" class="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
-                            <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
-                            <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
-                        </button>
-                        <button id="toggle-settings-mobile-btn" class="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 rounded-lg">
-                            <i data-lucide="settings" class="w-5 h-5"></i>
-                        </button>
-                    </div>
+    <!-- Top Navigation / Header -->
+    <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+            
+            <!-- Brand & Subtitle -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
+                    <i data-lucide="activity" class="w-6 h-6 text-white"></i>
                 </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                        ScorePotato
+                    </h1>
+                    <p class="text-xs text-slate-400 hidden sm:block">NBA Box Scores, The Lazy Way</p>
+                </div>
+            </div>
 
-                <!-- Date Picker & Quick Select Controls -->
-                <div class="flex flex-wrap items-center gap-2">
-                    <button id="prev-date-btn" class="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition-colors border border-slate-300 dark:border-slate-700/60" title="Previous Day">
+            <!-- Date Controls & Controls Header -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                
+                <!-- Quick Date Selector -->
+                <div class="flex items-center bg-slate-800 p-1 rounded-lg border border-slate-700">
+                    <button id="btn-prev-day" title="Previous Day" class="p-1.5 text-slate-400 hover:text-white rounded-md hover:bg-slate-700 transition">
                         <i data-lucide="chevron-left" class="w-4 h-4"></i>
                     </button>
-
-                    <button id="btn-yesterday" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-lg transition-colors border border-slate-300 dark:border-slate-700/60">
+                    
+                    <button id="btn-yesterday" class="px-2.5 py-1 text-xs font-medium text-slate-300 hover:text-white rounded-md hover:bg-slate-700 transition">
                         Yesterday
                     </button>
-                    <button id="btn-today" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm">
+                    <button id="btn-today" class="px-2.5 py-1 text-xs font-semibold text-white bg-indigo-600 rounded-md shadow-sm transition">
                         Today
                     </button>
 
-                    <input type="date" id="date-picker" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-medium rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
-
-                    <button id="next-date-btn" class="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition-colors border border-slate-300 dark:border-slate-700/60" title="Next Day">
+                    <button id="btn-next-day" title="Next Day" class="p-1.5 text-slate-400 hover:text-white rounded-md hover:bg-slate-700 transition">
                         <i data-lucide="chevron-right" class="w-4 h-4"></i>
                     </button>
-
-                    <div class="h-5 w-px bg-slate-300 dark:bg-slate-800 mx-1 hidden sm:block"></div>
-
-                    <!-- Live / Demo Data Indicator -->
-                    <div id="data-source-badge" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700/60 text-slate-600 dark:text-slate-400 text-xs font-medium rounded-lg flex items-center gap-1.5">
-                        <span id="source-indicator-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
-                        <span id="source-indicator-text">Checking API...</span>
-                    </div>
-
-                    <!-- Light / Dark Mode Toggle Button -->
-                    <button id="theme-toggle-btn" class="hidden md:flex p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-300 dark:border-slate-700/60 transition-colors" title="Toggle Light / Dark Theme">
-                        <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
-                        <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
-                    </button>
-
-                    <button id="toggle-settings-btn" class="hidden md:flex p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-700/60 transition-colors" title="Settings & Color Thresholds">
-                        <i data-lucide="settings" class="w-4 h-4"></i>
-                    </button>
                 </div>
+
+                <!-- Custom Date Input -->
+                <input type="date" id="date-picker" class="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none hidden md:block">
+
+                <!-- Expand/Collapse All Toggle -->
+                <button id="btn-toggle-all-games" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-medium rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+                    <i data-lucide="chevrons-up-down" class="w-3.5 h-3.5"></i>
+                    <span id="lbl-toggle-all">Expand All</span>
+                </button>
             </div>
         </div>
     </header>
 
-    <!-- Global Controls & Search Bar -->
-    <section class="bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 py-3">
-        <div class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-3">
-            
-            <!-- Quick Global Filters -->
-            <div class="w-full md:w-auto flex flex-wrap items-center gap-2 text-xs">
-                <div class="relative flex-1 sm:w-64">
-                    <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400"></i>
-                    <input type="text" id="global-search" placeholder="Search player, team, or status..." class="w-full pl-9 pr-4 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700/70 rounded-lg text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
-                </div>
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-                <!-- Min Minutes Filter -->
-                <select id="filter-min-minutes" class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700/70 text-slate-700 dark:text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <option value="0">All Minutes</option>
-                    <option value="10">&gt; 10 Mins</option>
-                    <option value="20">&gt; 20 Mins</option>
-                    <option value="30">&gt; 30 Mins</option>
-                </select>
-
-                <!-- Min GameScore Filter -->
-                <select id="filter-min-gamescore" class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700/70 text-slate-700 dark:text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <option value="-99">All GameScores</option>
-                    <option value="12">Good+ (GmSc &ge; 12)</option>
-                    <option value="20">Elite (GmSc &ge; 20)</option>
-                </select>
-            </div>
-
-            <!-- View / Expand Toggles & Formula Selection -->
-            <div class="w-full md:w-auto flex items-center justify-between md:justify-end gap-3 text-xs">
-                
-                <div class="flex items-center space-x-2">
-                    <span class="text-slate-500 dark:text-slate-400 font-medium">Formula:</span>
-                    <select id="formula-select" class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700/70 text-amber-600 dark:text-amber-400 font-bold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
-                        <option value="gamescore">Hollinger GameScore</option>
-                        <option value="fantasy">Standard Fantasy Pts</option>
-                        <option value="per_proxy">Simple PER Proxy</option>
-                    </select>
-                </div>
-
-                <div class="flex items-center space-x-1 border-l border-slate-300 dark:border-slate-700/80 pl-3">
-                    <button id="expand-all-btn" class="px-2.5 py-1.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium rounded-lg transition-colors border border-slate-300 dark:border-slate-700/60" title="Expand All Games">
-                        Expand All
-                    </button>
-                    <button id="collapse-all-btn" class="px-2.5 py-1.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium rounded-lg transition-colors border border-slate-300 dark:border-slate-700/60" title="Collapse All Games">
-                        Collapse All
-                    </button>
-                </div>
-
-            </div>
-        </div>
-    </section>
-
-    <!-- Interactive Performance Legend Bar -->
-    <section class="bg-slate-100 dark:bg-slate-950/70 border-b border-slate-200 dark:border-slate-800/80 py-2">
-        <div class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-2 text-xs">
-            <div class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-                <i data-lucide="palette" class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400"></i>
-                <span class="font-medium text-slate-700 dark:text-slate-300">Metric Heatmap Legend:</span>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-2">
-                <span class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Elite (&ge; <span id="leg-elite">20</span>)
-                </span>
-                <span class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-600/30">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Good (<span id="leg-good-min">12</span> - <span id="leg-good-max">19.9</span>)
-                </span>
-                <span class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700">
-                    <span class="w-2 h-2 rounded-full bg-slate-400"></span> Average (<span id="leg-avg-min">6</span> - <span id="leg-avg-max">11.9</span>)
-                </span>
-                <span class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-500/40">
-                    <span class="w-2 h-2 rounded-full bg-amber-500"></span> Below Avg (<span id="leg-below-min">1</span> - <span id="leg-below-max">5.9</span>)
-                </span>
-                <span class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-red-100 dark:bg-red-950/50 text-red-800 dark:text-red-300 border border-red-300 dark:border-red-500/40">
-                    <span class="w-2 h-2 rounded-full bg-red-500"></span> Poor (&lt; <span id="leg-poor">1</span>)
-                </span>
-            </div>
-
-            <div class="text-[11px] text-slate-500 font-mono hidden xl:block">
-                Formula: PTS + 0.4*FG - 0.7*FGA - 0.4*(FTA-FT) + 0.7*ORB + 0.3*DRB + STL + 0.7*AST + 0.7*BLK - 0.4*PF - TO
-            </div>
-        </div>
-    </section>
-
-    <!-- Main Single-Page Box Score Feed Container -->
-    <main class="flex-1 max-w-[1700px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        
-        <!-- Summary Stats Banner -->
-        <div id="slate-summary-bar" class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-xl bg-white dark:bg-slate-850 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-md">
-            <div class="flex items-center gap-3 shrink-0">
-                <div class="p-2 bg-indigo-500/10 rounded-lg text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                    <i data-lucide="calendar" class="w-5 h-5"></i>
-                </div>
-                <div>
-                    <h2 id="current-slate-title" class="text-base font-bold text-slate-900 dark:text-slate-100">NBA Slate Games</h2>
-                    <p id="slate-game-count" class="text-xs text-slate-500 dark:text-slate-400">Loading box scores...</p>
+        <!-- Banner / Slate Quick-Jump Ribbon -->
+        <section class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl">
+            <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-3">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="calendar" class="w-5 h-5 text-indigo-400"></i>
+                    <h2 class="text-base font-semibold text-white" id="slate-header-title">NBA Slate — ...</h2>
+                    <span id="slate-game-count" class="text-xs font-normal text-slate-400 bg-slate-800 px-2.5 py-0.5 rounded-full border border-slate-700">0 Games</span>
                 </div>
             </div>
 
-            <!-- Quick Jump Scoreboard Chips (Replaced Top Performers Chips) -->
-            <div id="top-performers-container" class="flex items-center gap-2 overflow-x-auto py-1 max-w-full scrollbar-thin">
-                <!-- Mini Scoreboard Jump Chips injected dynamically -->
+            <!-- Horizontal Mini Scoreboard Strip -->
+            <div id="mini-scoreboard-strip" class="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-thin">
+                <!-- Mini Scoreboard Chips injected via JS -->
             </div>
-        </div>
+        </section>
 
-        <!-- TOP & WORST PERFORMERS TABLE SECTION -->
-        <div id="daily-leaderboard-section" class="bg-white dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm dark:shadow-xl space-y-4">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3 cursor-pointer select-none" onclick="toggleLeaderboard()">
-                <div class="flex items-center gap-2.5">
-                    <div class="p-2 bg-amber-500/10 text-amber-500 rounded-lg">
-                        <i data-lucide="trophy" class="w-5 h-5"></i>
+        <!-- Leaders & Laggards Collapsible Section -->
+        <section id="leaderboard-section" class="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden transition-all">
+            <button id="btn-toggle-leaderboard" class="w-full px-5 py-4 flex items-center justify-between bg-slate-900 hover:bg-slate-850 transition border-b border-slate-800/60 text-left">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                        <i data-lucide="trophy" class="w-4 h-4 text-amber-400"></i>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                            Slate Leaders &amp; Laggards
-                            <span class="text-xs font-normal text-slate-500 dark:text-slate-400 font-mono">(Click to toggle)</span>
+                        <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+                            Slate Leaders & Laggards
+                            <span class="text-xs text-slate-400 font-normal">(Click to toggle)</span>
                         </h3>
-                        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Top 10 Best and Bottom 10 Worst performances across all daily box scores</p>
+                        <p class="text-xs text-slate-400">Top 10 Best and Bottom 10 Worst performances across all daily box scores</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-2" onclick="event.stopPropagation()">
-                    <button id="btn-show-top10" class="px-3.5 py-1.5 bg-indigo-600 text-white font-semibold text-xs sm:text-sm rounded-lg shadow-sm">Top 10 Performers</button>
-                    <button id="btn-show-bottom10" class="px-3.5 py-1.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs sm:text-sm rounded-lg transition-colors border border-slate-300 dark:border-slate-700">Bottom 10 Performers</button>
-                    <button id="toggle-leaderboard-btn" onclick="toggleLeaderboard()" class="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors ml-1">
-                        <i id="leaderboard-chevron" data-lucide="chevron-down" class="w-5 h-5"></i>
-                    </button>
+                <div class="flex items-center gap-2 text-slate-400">
+                    <i id="icon-leaderboard-chevron" data-lucide="chevron-down" class="w-5 h-5 transition-transform duration-200"></i>
+                </div>
+            </button>
+
+            <!-- Leaderboard Content Body -->
+            <div id="leaderboard-content" class="hidden p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 bg-slate-900/50">
+                <!-- Top 10 Performers -->
+                <div class="bg-slate-950/60 rounded-xl border border-slate-800 p-4">
+                    <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
+                        <h4 class="text-xs font-bold tracking-wider text-emerald-400 uppercase flex items-center gap-1.5">
+                            <i data-lucide="trending-up" class="w-3.5 h-3.5"></i> Top 10 Game Scores
+                        </h4>
+                        <span class="text-[10px] text-slate-500 uppercase font-mono">GmSc Formula</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="text-[10px] uppercase text-slate-500 bg-slate-900/80">
+                                <tr>
+                                    <th class="py-2 px-2">#</th>
+                                    <th class="py-2 px-2">Player</th>
+                                    <th class="py-2 px-2 text-center">Team</th>
+                                    <th class="py-2 px-2 text-right">PTS</th>
+                                    <th class="py-2 px-2 text-right">REB</th>
+                                    <th class="py-2 px-2 text-right">AST</th>
+                                    <th class="py-2 px-2 text-right font-bold text-emerald-400">GmSc</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-performers-tbody" class="divide-y divide-slate-800/40 text-slate-300">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Bottom 10 Performers -->
+                <div class="bg-slate-950/60 rounded-xl border border-slate-800 p-4">
+                    <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
+                        <h4 class="text-xs font-bold tracking-wider text-rose-400 uppercase flex items-center gap-1.5">
+                            <i data-lucide="trending-down" class="w-3.5 h-3.5"></i> Bottom 10 Game Scores
+                        </h4>
+                        <span class="text-[10px] text-slate-500 uppercase font-mono">Min 15 Mins</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="text-[10px] uppercase text-slate-500 bg-slate-900/80">
+                                <tr>
+                                    <th class="py-2 px-2">#</th>
+                                    <th class="py-2 px-2">Player</th>
+                                    <th class="py-2 px-2 text-center">Team</th>
+                                    <th class="py-2 px-2 text-right">PTS</th>
+                                    <th class="py-2 px-2 text-right">REB</th>
+                                    <th class="py-2 px-2 text-right">AST</th>
+                                    <th class="py-2 px-2 text-right font-bold text-rose-400">GmSc</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bottom-performers-tbody" class="divide-y divide-slate-800/40 text-slate-300">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
+        </section>
 
-            <div id="leaderboard-content" class="hidden overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-slate-100 dark:bg-slate-900 text-xs font-bold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 tracking-wider">
-                            <th class="px-3 py-2.5 text-center w-12">RANK</th>
-                            <th class="px-3 py-2.5">PLAYER</th>
-                            <th class="px-3 py-2.5">TEAM</th>
-                            <th class="px-2.5 py-2.5 text-center">MIN</th>
-                            <th class="px-2.5 py-2.5 text-center text-amber-600 dark:text-amber-400 font-bold">SCORE</th>
-                            <th class="px-2.5 py-2.5 text-center text-slate-800 dark:text-slate-200 font-bold">PTS</th>
-                            <th class="px-2.5 py-2.5 text-center">REB</th>
-                            <th class="px-2.5 py-2.5 text-center">AST</th>
-                            <th class="px-2.5 py-2.5 text-center">STL</th>
-                            <th class="px-2.5 py-2.5 text-center">BLK</th>
-                            <th class="px-2.5 py-2.5 text-center">FG</th>
-                            <th class="px-2.5 py-2.5 text-center">3PT</th>
-                            <th class="px-2.5 py-2.5 text-center">FT</th>
-                            <th class="px-2.5 py-2.5 text-center">TO</th>
-                            <th class="px-2.5 py-2.5 text-center">+/-</th>
-                        </tr>
-                    </thead>
-                    <tbody id="leaderboard-table-body">
-                        <!-- Leaderboard content dynamically injected -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Box Score Feed Grid -->
-        <div id="games-container" class="space-y-8">
-            <!-- Box Scores generated here -->
-        </div>
-
-        <!-- Empty State Container -->
-        <div id="no-games-view" class="hidden text-center py-16 bg-white dark:bg-slate-850 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <i data-lucide="slash" class="w-12 h-12 text-slate-400 dark:text-slate-600 mx-auto mb-3"></i>
-            <h3 class="text-lg font-bold text-slate-800 dark:text-slate-300">No Games Found</h3>
-            <p class="text-sm text-slate-500 max-w-md mx-auto mt-1">There are no NBA games scheduled or available for the selected date or search filter.</p>
-            <button id="reset-filters-btn" class="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition-colors">
-                Reset Filters &amp; Date
-            </button>
+        <!-- Games List Feed -->
+        <div id="games-container" class="space-y-6">
+            <!-- Game Cards dynamically injected here -->
         </div>
 
     </main>
 
-    <!-- Customization / Settings Modal -->
-    <div id="settings-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
-            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-                <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                    <i data-lucide="sliders" class="w-5 h-5 text-indigo-500"></i> Dashboard Settings
-                </h3>
-                <button id="close-settings-btn" class="text-slate-400 hover:text-slate-600 dark:hover:text-white">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-
-            <!-- Custom Threshold Adjuster -->
-            <div class="space-y-3">
-                <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">GameScore Threshold Tiers</h4>
-                <div class="space-y-2 text-xs">
-                    <div class="flex items-center justify-between gap-3">
-                        <span class="text-emerald-600 dark:text-emerald-400 font-medium">Elite (Min):</span>
-                        <input type="number" id="threshold-elite" value="20" class="w-20 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 text-right text-slate-800 dark:text-slate-200">
-                    </div>
-                    <div class="flex items-center justify-between gap-3">
-                        <span class="text-emerald-700 dark:text-emerald-500 font-medium">Good (Min):</span>
-                        <input type="number" id="threshold-good" value="12" class="w-20 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 text-right text-slate-800 dark:text-slate-200">
-                    </div>
-                    <div class="flex items-center justify-between gap-3">
-                        <span class="text-slate-700 dark:text-slate-300 font-medium">Average (Min):</span>
-                        <input type="number" id="threshold-avg" value="6" class="w-20 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 text-right text-slate-800 dark:text-slate-200">
-                    </div>
-                    <div class="flex items-center justify-between gap-3">
-                        <span class="text-amber-600 dark:text-amber-400 font-medium">Below Avg (Min):</span>
-                        <input type="number" id="threshold-below" value="1" class="w-20 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 text-right text-slate-800 dark:text-slate-200">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Footer Buttons -->
-            <div class="flex items-center justify-end gap-3 pt-2 border-t border-slate-200 dark:border-slate-800">
-                <button id="save-settings-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs rounded-lg transition-colors">
-                    Apply Settings
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="bg-slate-100 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800/80 py-6 mt-12">
-        <div class="max-w-[1700px] mx-auto px-4 text-center text-xs text-slate-500 space-y-2">
-            <p>NBA Single-Page Daily Box Score Dashboard — Continuous player evaluation view.</p>
-            <p class="text-slate-400 dark:text-slate-600">Calculated metrics: Hollinger GameScore, Fantasy Points, and PER Proxy.</p>
-        </div>
-    </footer>
-
     <!-- Application Script Logic -->
     <script>
-        // --- DEMO ROSTERS DATA (Safely Quoted) ---
-        const DEMO_TEAMS = [
-            { name: "Celtics", code: "BOS", city: "Boston", color: "#007A33", logo: "https://a.espncdn.com/i/teamlogos/nba/500/bos.png" },
-            { name: "Lakers", code: "LAL", city: "Los Angeles", color: "#552583", logo: "https://a.espncdn.com/i/teamlogos/nba/500/lal.png" },
-            { name: "Warriors", code: "GSW", city: "Golden State", color: "#1D428A", logo: "https://a.espncdn.com/i/teamlogos/nba/500/gsw.png" },
-            { name: "Suns", code: "PHX", city: "Phoenix", color: "#1D1160", logo: "https://a.espncdn.com/i/teamlogos/nba/500/phx.png" },
-            { name: "Bucks", code: "MIL", city: "Milwaukee", color: "#00471B", logo: "https://a.espncdn.com/i/teamlogos/nba/500/mil.png" },
-            { name: "Knicks", code: "NYK", city: "New York", color: "#006BB6", logo: "https://a.espncdn.com/i/teamlogos/nba/500/nyk.png" },
-            { name: "Nuggets", code: "DEN", city: "Denver", color: "#0E2240", logo: "https://a.espncdn.com/i/teamlogos/nba/500/den.png" },
-            { name: "Mavericks", code: "DAL", city: "Dallas", color: "#00538C", logo: "https://a.espncdn.com/i/teamlogos/nba/500/dal.png" },
-            { name: "Heat", code: "MIA", city: "Miami", color: "#98002E", logo: "https://a.espncdn.com/i/teamlogos/nba/500/mia.png" },
-            { name: "Thunder", code: "OKC", city: "Oklahoma City", color: "#007AC1", logo: "https://a.espncdn.com/i/teamlogos/nba/500/okc.png" }
-        ];
-
-        const DEMO_ROSTERS = {
-            "BOS": [
-                { name: "Jayson Tatum", pos: "F" }, { name: "Jaylen Brown", pos: "G/F" },
-                { name: "Kristaps Porzingis", pos: "C" }, { name: "Derrick White", pos: "G" },
-                { name: "Jrue Holiday", pos: "G" }, { name: "Al Horford", pos: "C" }
-            ],
-            "LAL": [
-                { name: "LeBron James", pos: "F" }, { name: "Anthony Davis", pos: "F/C" },
-                { name: "D'Angelo Russell", pos: "G" }, { name: "Austin Reaves", pos: "G" },
-                { name: "Rui Hachimura", pos: "F" }, { name: "Jarred Vanderbilt", pos: "F" }
-            ],
-            "GSW": [
-                { name: "Stephen Curry", pos: "G" }, { name: "Draymond Green", pos: "F" },
-                { name: "Andrew Wiggins", pos: "F" }, { name: "Jonathan Kuminga", pos: "F" },
-                { name: "Brandin Podziemski", pos: "G" }, { name: "Kevon Looney", pos: "C" }
-            ],
-            "PHX": [
-                { name: "Devin Booker", pos: "G" }, { name: "Kevin Durant", pos: "F" },
-                { name: "Bradley Beal", pos: "G" }, { name: "Jusuf Nurkic", pos: "C" },
-                { name: "Grayson Allen", pos: "G" }, { name: "Royce O'Neale", pos: "F" }
-            ],
-            "MIL": [
-                { name: "Giannis Antetokounmpo", pos: "F" }, { name: "Damian Lillard", pos: "G" },
-                { name: "Khris Middleton", pos: "F" }, { name: "Brook Lopez", pos: "C" },
-                { name: "Bobby Portis", pos: "F" }
-            ],
-            "NYK": [
-                { name: "Jalen Brunson", pos: "G" }, { name: "Karl-Anthony Towns", pos: "C" },
-                { name: "OG Anunoby", pos: "F" }, { name: "Mikal Bridges", pos: "F" },
-                { name: "Josh Hart", pos: "G" }
-            ],
-            "DEN": [
-                { name: "Nikola Jokic", pos: "C" }, { name: "Jamal Murray", pos: "G" },
-                { name: "Aaron Gordon", pos: "F" }, { name: "Michael Porter Jr.", pos: "F" },
-                { name: "Christian Braun", pos: "G" }
-            ],
-            "DAL": [
-                { name: "Luka Doncic", pos: "G" }, { name: "Kyrie Irving", pos: "G" },
-                { name: "Klay Thompson", pos: "G/F" }, { name: "P.J. Washington", pos: "F" },
-                { name: "Daniel Gafford", pos: "C" }
-            ],
-            "MIA": [
-                { name: "Jimmy Butler", pos: "F" }, { name: "Bam Adebayo", pos: "C" },
-                { name: "Tyler Herro", pos: "G" }, { name: "Terry Rozier", pos: "G" },
-                { name: "Ja'Kobe Walter", pos: "G" }
-            ],
-            "OKC": [
-                { name: "Shai Gilgeous-Alexander", pos: "G" }, { name: "Chet Holmgren", pos: "C/F" },
-                { name: "Jalen Williams", pos: "F" }, { name: "Luguentz Dort", pos: "G" },
-                { name: "Alex Caruso", pos: "G" }
-            ]
-        };
-
-        // --- APP STATE ---
+        // Global State
         const state = {
-            selectedDate: getEasternDateString(), // Defaults to Eastern Time (New York) Today
+            selectedDate: getTodayNYString(),
             games: [],
-            expandedGames: new Set(), // Collapsed by default
-            isLeaderboardExpanded: false, // Leaderboard section collapsed by default
-            searchQuery: '',
-            minMinutes: 0,
-            minGameScore: -99,
-            formula: 'gamescore',
-            dataSource: 'demo', // 'live' or 'demo'
-            theme: localStorage.getItem('nba_app_theme') || 'light',
-            leaderboardMode: 'top', // 'top' or 'bottom'
-            tableSort: {}, // Dynamic sort tracking per table
-            thresholds: {
-                elite: 20,
-                good: 12,
-                average: 6,
-                below: 1
-            }
+            expandedGames: new Set(), // Games collapsed by default
+            isLeaderboardExpanded: false, // Leaders & Laggards collapsed by default
+            loading: false
         };
 
-        // Helper to get date string (YYYY-MM-DD) in US Eastern Time (New York)
-        function getEasternDateString(daysOffset = 0) {
+        // Helper: Get Today's date in America/New_York (US Eastern)
+        function getTodayNYString() {
             const now = new Date();
-            if (daysOffset !== 0) {
-                now.setDate(now.getDate() + daysOffset);
-            }
-            const options = { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' };
-            const formatter = new Intl.DateTimeFormat('en-US', options);
-            const parts = formatter.formatToParts(now);
-            const month = parts.find(p => p.type === 'month').value;
-            const day = parts.find(p => p.type === 'day').value;
-            const year = parts.find(p => p.type === 'year').value;
-            return `${year}-${month}-${day}`;
+            const nyDateString = new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'America/New_York',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            }).format(now);
+            return nyDateString;
         }
 
-        // Initialize Theme
-        function applyTheme(theme) {
-            state.theme = theme;
-            localStorage.setItem('nba_app_theme', theme);
-            if (theme === 'dark') {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-        }
-        applyTheme(state.theme);
+        // Helper: Calculate Game Score
+        // Formula: PTS + 0.4*FGM - 0.7*FGA - 0.4*(FTA - FTM) + 0.7*OREB + 0.3*DREB + STL + 0.7*AST + 0.7*BLK - 0.4*PF - TOV
+        function calculateGameScore(stats) {
+            const pts = stats.pts || 0;
+            const fgm = stats.fgm || 0;
+            const fga = stats.fga || 0;
+            const ftm = stats.ftm || 0;
+            const fta = stats.fta || 0;
+            const oreb = stats.oreb || 0;
+            const dreb = stats.dreb || 0;
+            const stl = stats.stl || 0;
+            const ast = stats.ast || 0;
+            const blk = stats.blk || 0;
+            const pf = stats.pf || 0;
+            const tov = stats.tov || 0;
 
-        // --- ESPN LIVE API FETCH ENGINE ---
-        async function fetchRealNbaBoxScores(dateStr) {
-            const formattedDate = dateStr.replace(/-/g, '');
-            const espnScoreboardUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${formattedDate}`;
-            
-            let data = null;
-            try {
-                const res = await fetch(espnScoreboardUrl);
-                if (res.ok) data = await res.json();
-            } catch (err) {
-                try {
-                    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(espnScoreboardUrl)}`;
-                    const res = await fetch(proxyUrl);
-                    if (res.ok) data = await res.json();
-                } catch (e) {
-                    console.warn('CORS or network error on live API, falling back to demo engine');
+            const gmSc = pts + (0.4 * fgm) - (0.7 * fga) - (0.4 * (fta - ftm)) + (0.7 * oreb) + (0.3 * dreb) + stl + (0.7 * ast) + (0.7 * blk) - (0.4 * pf) - tov;
+            return Math.round(gmSc * 10) / 10;
+        }
+
+        // Clean SVG Logo Component Helper with Text Fallback
+        function getTeamLogoHtml(teamAbbrev, sizeClasses = "w-7 h-7") {
+            const logoUrl = `https://a.espncdn.com/i/teamlogos/nba/500/${teamAbbrev.toLowerCase()}.png`;
+            return `
+                <img src="${logoUrl}" 
+                     alt="${teamAbbrev}" 
+                     class="${sizeClasses} object-contain inline-block"
+                     onerror="this.onerror=null; this.parentNode.innerHTML='<span class=\'${sizeClasses} rounded-full bg-slate-700 text-slate-300 font-bold flex items-center justify-center text-[10px]\'>${teamAbbrev}</span>';" />
+            `;
+        }
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            setupEventListeners();
+            fetchSlateData(state.selectedDate);
+        });
+
+        function setupEventListeners() {
+            // Date Picker
+            const datePicker = document.getElementById('date-picker');
+            datePicker.value = state.selectedDate;
+            datePicker.addEventListener('change', (e) => {
+                if (e.target.value) {
+                    state.selectedDate = e.target.value;
+                    fetchSlateData(state.selectedDate);
                 }
-            }
-
-            if (!data || !data.events || data.events.length === 0) {
-                return null;
-            }
-
-            const gamesData = await Promise.all(data.events.map(async (event) => {
-                const gameId = event.id;
-                const summaryUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${gameId}`;
-                
-                let sumData = null;
-                try {
-                    const sumRes = await fetch(summaryUrl);
-                    if (sumRes.ok) sumData = await sumRes.json();
-                } catch (e) {
-                    try {
-                        const sumProxyUrl = `https://corsproxy.io/?${encodeURIComponent(summaryUrl)}`;
-                        const sumRes = await fetch(sumProxyUrl);
-                        if (sumRes.ok) sumData = await sumRes.json();
-                    } catch (err) {}
-                }
-
-                return parseEspnGame(event, sumData);
-            }));
-
-            return gamesData.filter(Boolean);
-        }
-
-        function parseEspnGame(event, summary) {
-            const competition = event.competitions?.[0];
-            if (!competition) return null;
-
-            const homeTeamObj = competition.competitors?.find(c => c.homeAway === 'home');
-            const awayTeamObj = competition.competitors?.find(c => c.homeAway === 'away');
-
-            if (!homeTeamObj || !awayTeamObj) return null;
-
-            const parseTeamBox = (compObj, boxData) => {
-                const recordObj = compObj.records?.find(r => r.type === 'total') || compObj.records?.[0];
-                const teamRecord = recordObj ? recordObj.summary : '';
-
-                const teamInfo = {
-                    name: compObj.team.name || compObj.team.shortDisplayName,
-                    code: compObj.team.abbreviation,
-                    city: compObj.team.location || compObj.team.name,
-                    color: '#' + (compObj.team.color || '334155'),
-                    logo: compObj.team.logo || `https://a.espncdn.com/i/teamlogos/nba/500/${compObj.team.abbreviation.toLowerCase()}.png`,
-                    record: teamRecord
-                };
-
-                const players = [];
-                const dnp = [];
-
-                if (boxData && boxData.boxscore && boxData.boxscore.players) {
-                    const teamBox = boxData.boxscore.players.find(b => b.team.id === compObj.team.id);
-                    if (teamBox && teamBox.statistics && teamBox.statistics[0]) {
-                        const statsGroup = teamBox.statistics[0];
-                        const keys = statsGroup.names || [];
-
-                        statsGroup.athletes.forEach(athlete => {
-                            if (!athlete.didNotPlay) {
-                                const stats = athlete.stats || [];
-                                const getStat = (name) => {
-                                    const idx = keys.indexOf(name);
-                                    return idx !== -1 ? stats[idx] : '0';
-                                };
-
-                                const minVal = parseInt(getStat('MIN')) || 0;
-                                const fgStr = getStat('FG') || '0-0';
-                                const [fgm, fga] = fgStr.split('-').map(Number);
-                                const tpStr = getStat('3PT') || '0-0';
-                                const [tpm, tpa] = tpStr.split('-').map(Number);
-                                const ftStr = getStat('FT') || '0-0';
-                                const [ftm, fta] = ftStr.split('-').map(Number);
-
-                                players.push({
-                                    name: athlete.athlete.displayName,
-                                    pos: athlete.athlete.position?.abbreviation || 'G',
-                                    min: minVal,
-                                    fgm: fgm || 0, fga: fga || 0,
-                                    tpm: tpm || 0, tpa: tpa || 0,
-                                    ftm: ftm || 0, fta: fta || 0,
-                                    oreb: parseInt(getStat('OREB')) || 0,
-                                    dreb: parseInt(getStat('DREB')) || 0,
-                                    ast: parseInt(getStat('AST')) || 0,
-                                    stl: parseInt(getStat('STL')) || 0,
-                                    blk: parseInt(getStat('BLK')) || 0,
-                                    to: parseInt(getStat('TO')) || 0,
-                                    pf: parseInt(getStat('PF')) || 0,
-                                    pts: parseInt(getStat('PTS')) || 0,
-                                    pm: parseInt(getStat('+/-')) || 0
-                                });
-                            } else {
-                                dnp.push({
-                                    name: athlete.athlete.displayName,
-                                    reason: athlete.reason || 'DNP'
-                                });
-                            }
-                        });
-                    }
-                }
-
-                return {
-                    team: teamInfo,
-                    players,
-                    dnp,
-                    totalPts: parseInt(compObj.score) || 0
-                };
-            };
-
-            const homeData = parseTeamBox(homeTeamObj, summary);
-            const awayData = parseTeamBox(awayTeamObj, summary);
-
-            return {
-                id: event.id,
-                status: event.status?.type?.shortDetail || 'FINAL',
-                clock: event.status?.type?.detail || '',
-                home: homeData,
-                away: awayData
-            };
-        }
-
-        // --- MATH METRICS CALCULATOR ---
-        function calculateGameScore(p) {
-            const ftMiss = (p.fta || 0) - (p.ftm || 0);
-            const gmSc = p.pts + (0.4 * p.fgm) - (0.7 * p.fga) - (0.4 * ftMiss) + (0.7 * p.oreb) + (0.3 * p.dreb) + p.stl + (0.7 * p.ast) + (0.7 * p.blk) - (0.4 * p.pf) - p.to;
-            return parseFloat(gmSc.toFixed(1));
-        }
-
-        function calculateFantasyScore(p) {
-            const pts = p.pts + (((p.oreb || 0) + (p.dreb || 0)) * 1.2) + (p.ast * 1.5) + (p.stl * 3) + (p.blk * 3) - p.to;
-            return parseFloat(pts.toFixed(1));
-        }
-
-        function calculatePerProxy(p) {
-            if (!p.min || p.min === 0) return 0;
-            const value = (p.pts + p.oreb + p.dreb + p.ast + p.stl + p.blk - p.to - (p.fga - p.fgm)) / p.min * 15;
-            return parseFloat(value.toFixed(1));
-        }
-
-        function getMetricValue(player) {
-            switch (state.formula) {
-                case 'fantasy': return calculateFantasyScore(player);
-                case 'per_proxy': return calculatePerProxy(player);
-                default: return calculateGameScore(player);
-            }
-        }
-
-        function getTierClass(val) {
-            if (val >= state.thresholds.elite) return 'tier-elite';
-            if (val >= state.thresholds.good) return 'tier-good';
-            if (val >= state.thresholds.average) return 'tier-average';
-            if (val >= state.thresholds.below) return 'tier-below';
-            return 'tier-poor';
-        }
-
-        // --- DEMO GAME GENERATOR ---
-        function generatePseudoRandom(seed) {
-            let x = Math.sin(seed++) * 10000;
-            return x - Math.floor(x);
-        }
-
-        function generateDemoGames(dateStr) {
-            let seed = 0;
-            for (let i = 0; i < dateStr.length; i++) {
-                seed += dateStr.charCodeAt(i);
-            }
-
-            const games = [];
-            const pairs = [
-                [DEMO_TEAMS[0], DEMO_TEAMS[1]], // BOS vs LAL
-                [DEMO_TEAMS[2], DEMO_TEAMS[3]], // GSW vs PHX
-                [DEMO_TEAMS[4], DEMO_TEAMS[5]], // MIL vs NYK
-                [DEMO_TEAMS[6], DEMO_TEAMS[7]], // DEN vs DAL
-                [DEMO_TEAMS[8], DEMO_TEAMS[9]]  // MIA vs OKC
-            ];
-
-            pairs.forEach((pair, idx) => {
-                const home = pair[0];
-                const away = pair[1];
-                const gameId = `game-${dateStr}-${idx}`;
-
-                const generateTeamStats = (team) => {
-                    const wins = Math.floor(15 + generatePseudoRandom(seed + idx * 7) * 35);
-                    const losses = Math.floor(10 + generatePseudoRandom(seed + idx * 11) * 35);
-                    const teamRecord = `${wins}-${losses}`;
-
-                    const teamWithRecord = { ...team, record: teamRecord };
-
-                    const roster = DEMO_ROSTERS[team.code] || [
-                        { name: `${team.name} Player 1`, pos: "G" },
-                        { name: `${team.name} Player 2`, pos: "F" },
-                        { name: `${team.name} Player 3`, pos: "C" },
-                        { name: `${team.name} Player 4`, pos: "G" },
-                        { name: `${team.name} Player 5`, pos: "F" }
-                    ];
-
-                    const players = roster.map((p, pIdx) => {
-                        const rand = generatePseudoRandom(seed + idx * 20 + pIdx);
-                        const min = pIdx < 5 ? Math.floor(26 + rand * 12) : Math.floor(10 + rand * 12);
-                        const fga = Math.floor((min / 34) * (8 + rand * 12));
-                        const fgm = Math.min(fga, Math.floor(fga * (0.35 + rand * 0.3)));
-                        const tpa = Math.floor(fga * (0.3 + rand * 0.4));
-                        const tpm = Math.min(tpa, Math.floor(tpa * (0.3 + rand * 0.35)));
-                        const fta = Math.floor(rand * 8);
-                        const ftm = Math.min(fta, Math.floor(fta * (0.6 + rand * 0.35)));
-                        const pts = (fgm - tpm) * 2 + tpm * 3 + ftm;
-                        const oreb = Math.floor(rand * 4);
-                        const dreb = Math.floor(1 + rand * 7);
-                        const ast = Math.floor(rand * 9);
-                        const stl = Math.floor(rand * 3.5);
-                        const blk = Math.floor(rand * 2.5);
-                        const to = Math.floor(rand * 4.5);
-                        const pf = Math.floor(1 + rand * 4);
-                        const pm = Math.floor(-15 + rand * 30);
-
-                        return {
-                            name: p.name,
-                            pos: p.pos,
-                            min, fgm, fga, tpm, tpa, ftm, fta,
-                            oreb, dreb, ast, stl, blk, to, pf, pts, pm
-                        };
-                    });
-
-                    const dnpPlayer = { name: `${team.name} Reserves`, pos: "G/F", dnp: true, reason: "Coach's Decision" };
-                    const totalPts = players.reduce((sum, item) => sum + item.pts, 0);
-
-                    return { team: teamWithRecord, players, dnp: [dnpPlayer], totalPts };
-                };
-
-                const homeData = generateTeamStats(home);
-                const awayData = generateTeamStats(away);
-
-                games.push({
-                    id: gameId,
-                    status: 'FINAL',
-                    clock: 'Q4 0:00',
-                    home: homeData,
-                    away: awayData
-                });
             });
 
-            return games;
+            // Quick Date Buttons
+            document.getElementById('btn-today').addEventListener('click', () => {
+                state.selectedDate = getTodayNYString();
+                datePicker.value = state.selectedDate;
+                fetchSlateData(state.selectedDate);
+            });
+
+            document.getElementById('btn-yesterday').addEventListener('click', () => {
+                const date = new Date(state.selectedDate + 'T12:00:00');
+                date.setDate(date.getDate() - 1);
+                state.selectedDate = date.toISOString().split('T')[0];
+                datePicker.value = state.selectedDate;
+                fetchSlateData(state.selectedDate);
+            });
+
+            document.getElementById('btn-prev-day').addEventListener('click', () => {
+                const date = new Date(state.selectedDate + 'T12:00:00');
+                date.setDate(date.getDate() - 1);
+                state.selectedDate = date.toISOString().split('T')[0];
+                datePicker.value = state.selectedDate;
+                fetchSlateData(state.selectedDate);
+            });
+
+            document.getElementById('btn-next-day').addEventListener('click', () => {
+                const date = new Date(state.selectedDate + 'T12:00:00');
+                date.setDate(date.getDate() + 1);
+                state.selectedDate = date.toISOString().split('T')[0];
+                datePicker.value = state.selectedDate;
+                fetchSlateData(state.selectedDate);
+            });
+
+            // Toggle Expand/Collapse All Box Scores
+            document.getElementById('btn-toggle-all-games').addEventListener('click', () => {
+                if (state.expandedGames.size === state.games.length) {
+                    state.expandedGames.clear();
+                } else {
+                    state.games.forEach(g => state.expandedGames.add(g.id));
+                }
+                renderGames();
+            });
+
+            // Toggle Leaders & Laggards Accordion
+            document.getElementById('btn-toggle-leaderboard').addEventListener('click', () => {
+                state.isLeaderboardExpanded = !state.isLeaderboardExpanded;
+                updateLeaderboardVisibility();
+            });
         }
 
-        // --- RENDER LOGIC ---
-        function renderHeaderLegend() {
-            document.getElementById('leg-elite').innerText = state.thresholds.elite;
-            document.getElementById('leg-good-min').innerText = state.thresholds.good;
-            document.getElementById('leg-good-max').innerText = (state.thresholds.elite - 0.1).toFixed(1);
-            document.getElementById('leg-avg-min').innerText = state.thresholds.average;
-            document.getElementById('leg-avg-max').innerText = (state.thresholds.good - 0.1).toFixed(1);
-            document.getElementById('leg-below-min').innerText = state.thresholds.below;
-            document.getElementById('leg-below-max').innerText = (state.thresholds.average - 0.1).toFixed(1);
-            document.getElementById('leg-poor').innerText = state.thresholds.below;
-        }
-
-        // Helper to safely render Team Logo Image with Fallback Badge
-        function getTeamLogoHtml(team, sizeClass = "w-6 h-6") {
-            if (team.logo && team.logo.startsWith('http')) {
-                return `<img src="${team.logo}" alt="${team.code}" class="${sizeClass} object-contain" onerror="this.outerHTML='<span class=\'font-bold text-slate-700 dark:text-slate-200\'>${team.code}</span>'">`;
-            }
-            return `<span class="px-1.5 py-0.5 rounded text-xs font-bold text-white" style="background-color: ${team.color || '#475569'}">${team.code}</span>`;
-        }
-
-        // Quick Jump Mini-Scoreboard Chips in Slate Banner
-        function renderTopPerformers() {
-            const container = document.getElementById('top-performers-container');
-            container.innerHTML = state.games.map(g => {
-                const awayWinner = g.away.totalPts > g.home.totalPts;
-                const homeWinner = g.home.totalPts > g.away.totalPts;
-                const statusText = g.status || 'FINAL';
-                const isLive = statusText.includes('Q') || statusText.includes('1ST') || statusText.includes('2ND') || statusText.includes('3RD') || statusText.includes('4TH') || statusText.includes('HALF') || statusText.includes(':');
-
-                return `
-                    <button onclick="scrollToGame('${g.id}')" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-indigo-50 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700/80 shadow-sm shrink-0 transition-colors group cursor-pointer text-xs">
-                        <div class="flex items-center gap-1.5">
-                            ${getTeamLogoHtml(g.away.team, "w-4 h-4")}
-                            <span class="font-bold ${awayWinner ? 'text-slate-900 dark:text-white' : 'text-slate-500'}">${g.away.team.code}</span>
-                            <span class="font-mono ${awayWinner ? 'font-extrabold text-indigo-600 dark:text-indigo-400' : 'text-slate-500'}">${g.away.totalPts}</span>
-                        </div>
-                        <span class="text-slate-400 font-bold text-[10px]">@</span>
-                        <div class="flex items-center gap-1.5">
-                            <span class="font-mono ${homeWinner ? 'font-extrabold text-indigo-600 dark:text-indigo-400' : 'text-slate-500'}">${g.home.totalPts}</span>
-                            <span class="font-bold ${homeWinner ? 'text-slate-900 dark:text-white' : 'text-slate-500'}">${g.home.team.code}</span>
-                            ${getTeamLogoHtml(g.home.team, "w-4 h-4")}
-                        </div>
-                        <span class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-extrabold tracking-tight ${isLive ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30' : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}">
-                            ${statusText}
-                        </span>
-                    </button>
-                `;
-            }).join('');
-        }
-
-        // --- RENDER TOP & WORST LEADERBOARD TABLE ---
-        function renderLeaderboardTable() {
+        function updateLeaderboardVisibility() {
             const content = document.getElementById('leaderboard-content');
-            const chevron = document.getElementById('leaderboard-chevron');
-
+            const chevron = document.getElementById('icon-leaderboard-chevron');
             if (state.isLeaderboardExpanded) {
                 content.classList.remove('hidden');
-                if (chevron) chevron.setAttribute('data-lucide', 'chevron-up');
+                chevron.classList.add('rotate-180');
             } else {
                 content.classList.add('hidden');
-                if (chevron) chevron.setAttribute('data-lucide', 'chevron-down');
+                chevron.classList.remove('rotate-180');
+            }
+        }
+
+        // Fetch Slate Box Scores (Using ESPN Public Endpoint with local fallback demo generator)
+        async function fetchSlateData(dateStr) {
+            state.loading = true;
+            renderLoadingState();
+
+            const formattedDate = dateStr.replace(/-/g, '');
+            const espnUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${formattedDate}`;
+
+            try {
+                const res = await fetch(espnUrl);
+                const data = await res.json();
+                
+                if (data && data.events) {
+                    state.games = parseEspnData(data.events);
+                } else {
+                    state.games = generateMockGames(dateStr);
+                }
+            } catch (err) {
+                console.warn('Live API fetch failed, loading generated slate mock:', err);
+                state.games = generateMockGames(dateStr);
             }
 
+            state.loading = false;
+            updateSlateHeader();
+            renderMiniScoreboard();
+            renderTopPerformers();
+            renderGames();
+        }
+
+        function renderLoadingState() {
+            const container = document.getElementById('games-container');
+            container.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-16 text-slate-500">
+                    <div class="w-8 h-8 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mb-3"></div>
+                    <p class="text-sm font-medium">Fetching NBA Box Scores...</p>
+                </div>
+            `;
+        }
+
+        function updateSlateHeader() {
+            const d = new Date(state.selectedDate + 'T12:00:00');
+            const formattedDate = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+            document.getElementById('slate-header-title').textContent = `NBA Slate — ${formattedDate}`;
+            document.getElementById('slate-game-count').textContent = `${state.games.length} Games Displayed`;
+        }
+
+        function renderMiniScoreboard() {
+            const strip = document.getElementById('mini-scoreboard-strip');
+            strip.innerHTML = '';
+
+            if (state.games.length === 0) {
+                strip.innerHTML = `<span class="text-xs text-slate-500">No games scheduled for this date.</span>`;
+                return;
+            }
+
+            state.games.forEach(game => {
+                const chip = document.createElement('button');
+                chip.className = `flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-950/80 hover:bg-slate-800 hover:border-indigo-500/50 transition cursor-pointer flex-shrink-0 text-xs shadow-sm`;
+                chip.onclick = () => scrollToGame(game.id);
+
+                chip.innerHTML = `
+                    <div class="flex items-center gap-1.5">
+                        ${getTeamLogoHtml(game.awayTeam.abbrev, "w-4 h-4")}
+                        <span class="font-semibold text-slate-300">${game.awayTeam.abbrev}</span>
+                        <span class="font-bold text-slate-100">${game.awayTeam.score}</span>
+                    </div>
+                    <span class="text-slate-600 font-bold">@</span>
+                    <div class="flex items-center gap-1.5">
+                        <span class="font-bold text-slate-100">${game.homeTeam.score}</span>
+                        <span class="font-semibold text-slate-300">${game.homeTeam.abbrev}</span>
+                        ${getTeamLogoHtml(game.homeTeam.abbrev, "w-4 h-4")}
+                    </div>
+                    <span class="ml-1 text-[10px] px-1.5 py-0.5 rounded font-mono ${game.status.includes('FINAL') ? 'bg-slate-800 text-slate-400' : 'bg-amber-500/20 text-amber-400 font-bold'}">${game.status}</span>
+                `;
+
+                strip.appendChild(chip);
+            });
+        }
+
+        function scrollToGame(gameId) {
+            state.expandedGames.add(gameId);
+            renderGames();
+            setTimeout(() => {
+                const el = document.getElementById(`game-card-${gameId}`);
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    el.classList.add('ring-2', 'ring-indigo-500');
+                    setTimeout(() => el.classList.remove('ring-2', 'ring-indigo-500'), 2000);
+                }
+            }, 50);
+        }
+
+        function renderTopPerformers() {
             const allPlayers = [];
             state.games.forEach(g => {
-                [g.home, g.away].forEach(t => {
-                    t.players.forEach(p => {
-                        const val = getMetricValue(p);
-                        allPlayers.push({ player: p, team: t.team, val });
-                    });
+                const homeRecord = g.homeTeam.record || '';
+                const awayRecord = g.awayTeam.record || '';
+                
+                g.awayTeam.players.forEach(p => {
+                    allPlayers.push({ ...p, team: g.awayTeam.abbrev, gameStatus: g.status });
+                });
+                g.homeTeam.players.forEach(p => {
+                    allPlayers.push({ ...p, team: g.homeTeam.abbrev, gameStatus: g.status });
                 });
             });
 
-            if (state.leaderboardMode === 'top') {
-                allPlayers.sort((a, b) => b.val - a.val);
-            } else {
-                allPlayers.sort((a, b) => a.val - b.val);
-            }
+            // Sort by Game Score descending
+            allPlayers.sort((a, b) => b.gmSc - a.gmSc);
 
-            const list = allPlayers.slice(0, 10);
-            const tbody = document.getElementById('leaderboard-table-body');
+            // Top 10
+            const top10 = allPlayers.slice(0, 10);
+            const topTbody = document.getElementById('top-performers-tbody');
+            topTbody.innerHTML = top10.map((p, i) => `
+                <tr class="hover:bg-slate-850/50 transition">
+                    <td class="py-1.5 px-2 font-mono text-slate-500">${i + 1}</td>
+                    <td class="py-1.5 px-2 font-medium text-white flex items-center gap-1.5">
+                        ${getTeamLogoHtml(p.team, "w-3.5 h-3.5")}
+                        ${p.name}
+                    </td>
+                    <td class="py-1.5 px-2 text-center text-slate-400 font-mono">${p.team}</td>
+                    <td class="py-1.5 px-2 text-right font-semibold text-slate-200">${p.pts}</td>
+                    <td class="py-1.5 px-2 text-right text-slate-400">${p.reb}</td>
+                    <td class="py-1.5 px-2 text-right text-slate-400">${p.ast}</td>
+                    <td class="py-1.5 px-2 text-right font-bold text-emerald-400 font-mono">${p.gmSc}</td>
+                </tr>
+            `).join('');
 
-            tbody.innerHTML = list.map((item, index) => {
-                const p = item.player;
-                const tier = getTierClass(item.val);
-                const pmClass = p.pm > 0 ? 'text-emerald-600 dark:text-emerald-400' : (p.pm < 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-400');
+            // Bottom 10 (Filter for min 15 minutes played to prevent 0-minute clutter)
+            const eligibleBottom = allPlayers.filter(p => (p.min || 0) >= 15);
+            eligibleBottom.sort((a, b) => a.gmSc - b.gmSc);
 
-                return `
-                    <tr class="${tier} border-b border-slate-200 dark:border-slate-800 text-xs sm:text-sm transition-colors">
-                        <td class="px-3 py-2.5 text-center font-bold text-slate-500">${index + 1}</td>
-                        <td class="px-3 py-2.5 font-bold text-slate-900 dark:text-slate-100">${p.name} <span class="text-xs text-slate-400 font-normal">${p.pos}</span></td>
-                        <td class="px-3 py-2.5 font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-                            ${getTeamLogoHtml(item.team, "w-4 h-4")} <span>${item.team.code}</span>
-                        </td>
-                        <td class="px-2.5 py-2.5 text-center font-mono text-slate-600 dark:text-slate-300">${p.min}</td>
-                        <td class="px-2.5 py-2.5 text-center font-bold font-mono text-amber-600 dark:text-amber-400 text-base">${item.val}</td>
-                        <td class="px-2.5 py-2.5 text-center font-bold font-mono text-slate-800 dark:text-slate-100 text-base">${p.pts}</td>
-                        <td class="px-2.5 py-2.5 text-center font-mono text-slate-600 dark:text-slate-300">${p.oreb + p.dreb}</td>
-                        <td class="px-2.5 py-2.5 text-center font-mono text-slate-600 dark:text-slate-300">${p.ast}</td>
-                        <td class="px-2.5 py-2.5 text-center font-mono text-slate-600 dark:text-slate-300">${p.stl}</td>
-                        <td class="px-2.5 py-2.5 text-center font-mono text-slate-600 dark:text-slate-300">${p.blk}</td>
-                        <td class="px-2.5 py-2.5 text-center font-mono text-slate-500">${p.fgm}-${p.fga}</td>
-                        <td class="px-2.5 py-2.5 text-center font-mono text-slate-500">${p.tpm}-${p.tpa}</td>
-                        <td class="px-2.5 py-2.5 text-center font-mono text-slate-500">${p.ftm}-${p.fta}</td>
-                        <td class="px-2.5 py-2.5 text-center font-mono text-slate-500">${p.to}</td>
-                        <td class="px-2.5 py-2.5 text-center font-mono ${pmClass}">${p.pm > 0 ? '+' + p.pm : p.pm}</td>
-                    </tr>
-                `;
-            }).join('');
-
-            if (window.lucide) {
-                window.lucide.createIcons();
-            }
+            const bottom10 = eligibleBottom.slice(0, 10);
+            const bottomTbody = document.getElementById('bottom-performers-tbody');
+            bottomTbody.innerHTML = bottom10.map((p, i) => `
+                <tr class="hover:bg-slate-850/50 transition">
+                    <td class="py-1.5 px-2 font-mono text-slate-500">${i + 1}</td>
+                    <td class="py-1.5 px-2 font-medium text-white flex items-center gap-1.5">
+                        ${getTeamLogoHtml(p.team, "w-3.5 h-3.5")}
+                        ${p.name}
+                    </td>
+                    <td class="py-1.5 px-2 text-center text-slate-400 font-mono">${p.team}</td>
+                    <td class="py-1.5 px-2 text-right font-semibold text-slate-200">${p.pts}</td>
+                    <td class="py-1.5 px-2 text-right text-slate-400">${p.reb}</td>
+                    <td class="py-1.5 px-2 text-right text-slate-400">${p.ast}</td>
+                    <td class="py-1.5 px-2 text-right font-bold text-rose-400 font-mono">${p.gmSc}</td>
+                </tr>
+            `).join('');
         }
 
-        function toggleLeaderboard() {
-            state.isLeaderboardExpanded = !state.isLeaderboardExpanded;
-            renderLeaderboardTable();
-        }
-
-        // --- SORTING HELPERS ---
-        function sortPlayers(players, sortKey, sortDir) {
-            return [...players].sort((a, b) => {
-                let valA, valB;
-                if (sortKey === 'val') {
-                    valA = getMetricValue(a);
-                    valB = getMetricValue(b);
-                } else if (sortKey === 'reb') {
-                    valA = a.oreb + a.dreb;
-                    valB = b.oreb + b.dreb;
-                } else if (sortKey === 'fgPct') {
-                    valA = a.fga > 0 ? a.fgm / a.fga : 0;
-                    valB = b.fga > 0 ? b.fgm / b.fga : 0;
-                } else if (sortKey === 'tpPct') {
-                    valA = a.tpa > 0 ? a.tpm / a.tpa : 0;
-                    valB = b.tpa > 0 ? b.tpm / b.tpa : 0;
-                } else if (sortKey === 'ftPct') {
-                    valA = a.fta > 0 ? a.ftm / a.fta : 0;
-                    valB = b.fta > 0 ? b.ftm / b.fta : 0;
-                } else if (sortKey === 'name') {
-                    valA = a.name;
-                    valB = b.name;
-                } else {
-                    valA = a[sortKey] || 0;
-                    valB = b[sortKey] || 0;
-                }
-
-                if (typeof valA === 'string') {
-                    return sortDir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                }
-                return sortDir === 'asc' ? valA - valB : valB - valA;
-            });
-        }
-
-        function handleHeaderSort(tableId, colKey) {
-            const current = state.tableSort[tableId] || { col: 'val', dir: 'desc' };
-            let newDir = 'desc';
-            if (current.col === colKey) {
-                newDir = current.dir === 'desc' ? 'asc' : 'desc';
-            }
-            state.tableSort[tableId] = { col: colKey, dir: newDir };
-            renderBoxScores();
-        }
-
-        // --- RENDER MAIN BOX SCORES FEED ---
-        function renderBoxScores() {
+        function renderGames() {
             const container = document.getElementById('games-container');
-            const noGamesView = document.getElementById('no-games-view');
+            container.innerHTML = '';
 
-            let visibleGameCount = 0;
-            let html = '';
+            const allExpanded = state.expandedGames.size === state.games.length && state.games.length > 0;
+            document.getElementById('lbl-toggle-all').textContent = allExpanded ? 'Collapse All' : 'Expand All';
+
+            if (state.games.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center">
+                        <i data-lucide="calendar-x" class="w-12 h-12 text-slate-600 mx-auto mb-3"></i>
+                        <h3 class="text-base font-semibold text-slate-300">No Box Scores Found</h3>
+                        <p class="text-xs text-slate-500 mt-1">There are no NBA games scheduled on ${state.selectedDate}.</p>
+                    </div>
+                `;
+                return;
+            }
 
             state.games.forEach(game => {
                 const isExpanded = state.expandedGames.has(game.id);
+                const gameCard = document.createElement('div');
+                gameCard.id = `game-card-${game.id}`;
+                gameCard.className = `bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden transition-all duration-200`;
 
-                const filterPlayer = (p) => {
-                    if (p.dnp) return false;
-                    const val = getMetricValue(p);
-                    if (p.min < state.minMinutes) return false;
-                    if (val < state.minGameScore) return false;
-                    if (state.searchQuery) {
-                        const q = state.searchQuery.toLowerCase();
-                        const matchName = p.name.toLowerCase().includes(q);
-                        const matchTeam = game.home.team.name.toLowerCase().includes(q) || game.away.team.name.toLowerCase().includes(q);
-                        if (!matchName && !matchTeam) return false;
-                    }
-                    return true;
-                };
-
-                let homePlayers = game.home.players.filter(filterPlayer);
-                let awayPlayers = game.away.players.filter(filterPlayer);
-
-                if (state.searchQuery && homePlayers.length === 0 && awayPlayers.length === 0) {
-                    return;
-                }
-
-                visibleGameCount++;
-
-                // Table Sort State (Defaults to 'val' / GameScore desc)
-                const awayTableId = `${game.id}_away`;
-                const homeTableId = `${game.id}_home`;
-
-                const awaySort = state.tableSort[awayTableId] || { col: 'val', dir: 'desc' };
-                const homeSort = state.tableSort[homeTableId] || { col: 'val', dir: 'desc' };
-
-                awayPlayers = sortPlayers(awayPlayers, awaySort.col, awaySort.dir);
-                homePlayers = sortPlayers(homePlayers, homeSort.col, homeSort.dir);
-
-                const renderTableHeaders = (tableId, currentSort) => {
-                    const columns = [
-                        { key: 'name', label: 'PLAYER', align: 'text-left' },
-                        { key: 'min', label: 'MIN', align: 'text-center' },
-                        { key: 'val', label: 'SCORE', align: 'text-center', class: 'text-amber-600 dark:text-amber-400 font-bold' },
-                        { key: 'pts', label: 'PTS', align: 'text-center', class: 'text-slate-800 dark:text-slate-200 font-bold' },
-                        { key: 'reb', label: 'REB', align: 'text-center' },
-                        { key: 'ast', label: 'AST', align: 'text-center' },
-                        { key: 'stl', label: 'STL', align: 'text-center' },
-                        { key: 'blk', label: 'BLK', align: 'text-center' },
-                        { key: 'fgm', label: 'FG', align: 'text-center' },
-                        { key: 'fgPct', label: 'FG%', align: 'text-center' },
-                        { key: 'tpm', label: '3PT', align: 'text-center' },
-                        { key: 'tpPct', label: '3P%', align: 'text-center' },
-                        { key: 'ftm', label: 'FT', align: 'text-center' },
-                        { key: 'ftPct', label: 'FT%', align: 'text-center' },
-                        { key: 'to', label: 'TO', align: 'text-center' },
-                        { key: 'pf', label: 'PF', align: 'text-center' },
-                        { key: 'pm', label: '+/-', align: 'text-center' },
-                    ];
-
-                    return columns.map(c => {
-                        const isSorted = currentSort.col === c.key;
-                        const icon = isSorted ? (currentSort.dir === 'desc' ? '▼' : '▲') : '';
-                        return `
-                            <th class="px-2.5 py-2.5 ${c.align} ${c.class || ''} cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors select-none text-xs sm:text-sm font-bold" onclick="handleHeaderSort('${tableId}', '${c.key}')">
-                                <span class="inline-flex items-center gap-0.5">
-                                    ${c.label} <span class="text-[10px] font-mono text-indigo-500">${icon}</span>
-                                </span>
-                            </th>
-                        `;
-                    }).join('');
-                };
-
-                const renderTableRows = (players) => {
-                    return players.map(p => {
-                        const val = getMetricValue(p);
-                        const tier = getTierClass(val);
-                        const fgPct = p.fga > 0 ? ((p.fgm / p.fga) * 100).toFixed(0) : '0';
-                        const tpPct = p.tpa > 0 ? ((p.tpm / p.tpa) * 100).toFixed(0) : '0';
-                        const ftPct = p.fta > 0 ? ((p.ftm / p.fta) * 100).toFixed(0) : '0';
-                        const pmClass = p.pm > 0 ? 'text-emerald-600 dark:text-emerald-400' : (p.pm < 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-400');
-
-                        return `
-                            <tr class="${tier} transition-colors border-b border-slate-200 dark:border-slate-800/60 text-xs sm:text-sm">
-                                <td class="px-3.5 py-2.5 font-semibold text-slate-900 dark:text-slate-100 flex items-center justify-between">
-                                    <span>${p.name} <span class="text-xs text-slate-400 font-normal ml-1.5">${p.pos}</span></span>
-                                </td>
-                                <td class="px-2.5 py-2.5 text-center text-slate-600 dark:text-slate-300 font-mono">${p.min}</td>
-                                <td class="px-2.5 py-2.5 text-center font-bold text-amber-600 dark:text-amber-400 font-mono text-base">${val}</td>
-                                <td class="px-2.5 py-2.5 text-center font-bold text-slate-800 dark:text-slate-100 font-mono text-base">${p.pts}</td>
-                                <td class="px-2.5 py-2.5 text-center text-slate-600 dark:text-slate-300 font-mono">${p.oreb + p.dreb}</td>
-                                <td class="px-2.5 py-2.5 text-center text-slate-600 dark:text-slate-300 font-mono">${p.ast}</td>
-                                <td class="px-2.5 py-2.5 text-center text-slate-600 dark:text-slate-300 font-mono">${p.stl}</td>
-                                <td class="px-2.5 py-2.5 text-center text-slate-600 dark:text-slate-300 font-mono">${p.blk}</td>
-                                <td class="px-2.5 py-2.5 text-center text-slate-500 font-mono">${p.fgm}-${p.fga}</td>
-                                <td class="px-2.5 py-2.5 text-center text-slate-500 font-mono text-xs">${fgPct}%</td>
-                                <td class="px-2.5 py-2.5 text-center text-slate-500 font-mono">${p.tpm}-${p.tpa}</td>
-                                <td class="px-2.5 py-2.5 text-center text-slate-500 font-mono text-xs">${tpPct}%</td>
-                                <td class="px-2.5 py-2.5 text-center text-slate-500 font-mono">${p.ftm}-${p.fta}</td>
-                                <td class="px-2.5 py-2.5 text-center text-slate-500 font-mono text-xs">${ftPct}%</td>
-                                <td class="px-2.5 py-2.5 text-center text-slate-500 font-mono">${p.to}</td>
-                                <td class="px-2.5 py-2.5 text-center text-slate-500 font-mono">${p.pf}</td>
-                                <td class="px-2.5 py-2.5 text-center font-mono ${pmClass}">${p.pm > 0 ? '+' + p.pm : p.pm}</td>
-                            </tr>
-                        `;
-                    }).join('');
-                };
-
-                html += `
-                    <div id="game-card-${game.id}" class="bg-white dark:bg-slate-850 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-md dark:shadow-xl overflow-hidden transition-all scroll-mt-24">
+                gameCard.innerHTML = `
+                    <!-- Game Score Header Banner (Click to Expand/Collapse) -->
+                    <div onclick="toggleGameCard('${game.id}')" class="p-4 sm:p-5 bg-slate-900 hover:bg-slate-850 cursor-pointer transition flex items-center justify-between select-none">
                         
-                        <!-- Header Scoreboard Banner (Fixed 3-Column Grid Alignment) -->
-                        <div class="bg-slate-100 dark:bg-gradient-to-r dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 cursor-pointer select-none" onclick="toggleGame('${game.id}')">
+                        <!-- Fixed 3-Column Grid Layout for Perfect Alignment Across Cards -->
+                        <div class="w-full grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-6 max-w-4xl mx-auto">
                             
-                            <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-6 w-full max-w-4xl mx-auto">
-                                <!-- Away Team (Left Aligned) -->
-                                <div class="flex items-center gap-2 sm:gap-3 justify-start min-w-0">
-                                    <div class="shrink-0">
-                                        ${getTeamLogoHtml(game.away.team, "w-8 h-8 sm:w-10 sm:h-10")}
-                                    </div>
-                                    <div class="min-w-0">
-                                        <div class="text-sm sm:text-lg font-extrabold text-slate-900 dark:text-slate-100 tracking-wide truncate">${game.away.team.city} ${game.away.team.name}</div>
-                                        <div class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-mono flex items-center gap-2">
-                                            <span>${game.away.team.code}</span>
-                                            ${game.away.team.record ? `<span class="px-1.5 py-0.2 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded font-semibold text-[11px]">${game.away.team.record}</span>` : ''}
-                                        </div>
-                                    </div>
+                            <!-- Away Team Column (Right Aligned to Center Score) -->
+                            <div class="flex items-center justify-end gap-2 sm:gap-3 text-right">
+                                <div class="hidden sm:block">
+                                    <span class="text-sm sm:text-base font-bold text-white block leading-tight">${game.awayTeam.name}</span>
+                                    <span class="text-xs text-slate-400 font-mono">${game.awayTeam.abbrev} ${game.awayTeam.record ? `(${game.awayTeam.record})` : ''}</span>
                                 </div>
-
-                                <!-- Central Score & Status Badge (Fixed Center Column) -->
-                                <div class="text-center px-3 sm:px-5 py-1.5 bg-white dark:bg-slate-950/80 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm shrink-0 min-w-[130px] sm:min-w-[160px]">
-                                    <div class="text-xl sm:text-2xl font-extrabold font-mono text-amber-600 dark:text-amber-400 tracking-wider flex items-center justify-center gap-2">
-                                        <span>${game.away.totalPts}</span>
-                                        <span class="text-slate-400 dark:text-slate-600 font-normal text-base">-</span>
-                                        <span>${game.home.totalPts}</span>
-                                    </div>
-                                    <div class="text-[11px] sm:text-xs uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-semibold truncate">${game.status}</div>
-                                </div>
-
-                                <!-- Home Team (Right Aligned) -->
-                                <div class="flex items-center gap-2 sm:gap-3 justify-end text-right min-w-0">
-                                    <div class="min-w-0">
-                                        <div class="text-sm sm:text-lg font-extrabold text-slate-900 dark:text-slate-100 tracking-wide truncate">${game.home.team.city} ${game.home.team.name}</div>
-                                        <div class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-mono flex items-center justify-end gap-2">
-                                            ${game.home.team.record ? `<span class="px-1.5 py-0.2 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded font-semibold text-[11px]">${game.home.team.record}</span>` : ''}
-                                            <span>${game.home.team.code}</span>
-                                        </div>
-                                    </div>
-                                    <div class="shrink-0">
-                                        ${getTeamLogoHtml(game.home.team, "w-8 h-8 sm:w-10 sm:h-10")}
-                                    </div>
-                                </div>
+                                <span class="sm:hidden font-bold text-white text-sm">${game.awayTeam.abbrev}</span>
+                                ${getTeamLogoHtml(game.awayTeam.abbrev, "w-8 h-8 sm:w-10 sm:h-10")}
                             </div>
 
-                            <div class="flex items-center gap-2 shrink-0 ml-2">
-                                <button class="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
-                                    <i data-lucide="${isExpanded ? 'chevron-up' : 'chevron-down'}" class="w-5 h-5"></i>
-                                </button>
+                            <!-- Central Score Box -->
+                            <div class="flex flex-col items-center justify-center px-4 py-1.5 bg-slate-950/80 border border-slate-800 rounded-xl min-w-[120px]">
+                                <div class="flex items-center gap-2 sm:gap-3">
+                                    <span class="text-xl sm:text-2xl font-extrabold font-mono ${game.awayTeam.score >= game.homeTeam.score ? 'text-amber-400' : 'text-slate-400'}">${game.awayTeam.score}</span>
+                                    <span class="text-slate-600 font-bold">-</span>
+                                    <span class="text-xl sm:text-2xl font-extrabold font-mono ${game.homeTeam.score >= game.awayTeam.score ? 'text-amber-400' : 'text-slate-400'}">${game.homeTeam.score}</span>
+                                </div>
+                                <span class="text-[10px] font-bold uppercase tracking-wider ${game.status.includes('FINAL') ? 'text-slate-500' : 'text-emerald-400 animate-pulse'} font-mono">${game.status}</span>
                             </div>
+
+                            <!-- Home Team Column (Left Aligned from Center Score) -->
+                            <div class="flex items-center justify-start gap-2 sm:gap-3 text-left">
+                                ${getTeamLogoHtml(game.homeTeam.abbrev, "w-8 h-8 sm:w-10 sm:h-10")}
+                                <div class="hidden sm:block">
+                                    <span class="text-sm sm:text-base font-bold text-white block leading-tight">${game.homeTeam.name}</span>
+                                    <span class="text-xs text-slate-400 font-mono">${game.homeTeam.record ? `(${game.homeTeam.record})` : ''} ${game.homeTeam.abbrev}</span>
+                                </div>
+                                <span class="sm:hidden font-bold text-white text-sm">${game.homeTeam.abbrev}</span>
+                            </div>
+
                         </div>
 
-                        <!-- Full Game Tables Body -->
-                        <div class="${isExpanded ? 'block' : 'hidden'} p-4 space-y-6">
-                            
-                            <!-- Away Team Table -->
-                            <div class="space-y-2">
-                                <div class="flex items-center justify-between px-1">
-                                    <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                                        ${getTeamLogoHtml(game.away.team, "w-4 h-4")} ${game.away.team.city} ${game.away.team.name} Box Score
-                                        ${game.away.team.record ? `<span class="text-slate-400 font-normal">(${game.away.team.record})</span>` : ''}
-                                    </h4>
-                                    <span class="text-xs font-mono text-slate-500">Total: ${game.away.totalPts} PTS</span>
-                                </div>
-                                <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-                                    <table class="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr class="bg-slate-100 dark:bg-slate-900/90 text-[11px] font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
-                                                ${renderTableHeaders(awayTableId, awaySort)}
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            ${renderTableRows(awayPlayers)}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <!-- Home Team Table -->
-                            <div class="space-y-2">
-                                <div class="flex items-center justify-between px-1">
-                                    <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                                        ${getTeamLogoHtml(game.home.team, "w-4 h-4")} ${game.home.team.city} ${game.home.team.name} Box Score
-                                        ${game.home.team.record ? `<span class="text-slate-400 font-normal">(${game.home.team.record})</span>` : ''}
-                                    </h4>
-                                    <span class="text-xs font-mono text-slate-500">Total: ${game.home.totalPts} PTS</span>
-                                </div>
-                                <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-                                    <table class="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr class="bg-slate-100 dark:bg-slate-900/90 text-[11px] font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
-                                                ${renderTableHeaders(homeTableId, homeSort)}
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            ${renderTableRows(homePlayers)}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
+                        <!-- Chevron Toggle Icon -->
+                        <div class="text-slate-500 hover:text-slate-300 ml-2">
+                            <i data-lucide="chevron-down" class="w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}"></i>
                         </div>
                     </div>
+
+                    <!-- Collapsible Full Box Score Tables -->
+                    ${isExpanded ? `
+                        <div class="border-t border-slate-800 p-4 sm:p-6 bg-slate-950/40 space-y-6">
+                            ${renderTeamBoxTable(game.awayTeam)}
+                            ${renderTeamBoxTable(game.homeTeam)}
+                        </div>
+                    ` : ''}
                 `;
+
+                container.appendChild(gameCard);
             });
 
-            container.innerHTML = html;
-
-            if (visibleGameCount === 0) {
-                noGamesView.classList.remove('hidden');
-            } else {
-                noGamesView.classList.add('hidden');
-            }
-
-            document.getElementById('slate-game-count').innerText = `${visibleGameCount} Games Displayed — Continuous Feed`;
-            
-            if (window.lucide) {
-                window.lucide.createIcons();
-            }
+            lucide.createIcons();
         }
 
-        function toggleGame(gameId) {
+        function toggleGameCard(gameId) {
             if (state.expandedGames.has(gameId)) {
                 state.expandedGames.delete(gameId);
             } else {
                 state.expandedGames.add(gameId);
             }
-            renderBoxScores();
+            renderGames();
         }
 
-        async function loadSlateData() {
-            const dateBadge = document.getElementById('source-indicator-text');
-            const dateDot = document.getElementById('source-indicator-dot');
-            
-            dateBadge.innerText = 'Fetching Live...';
-            dateDot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
+        function renderTeamBoxTable(team) {
+            return `
+                <div>
+                    <!-- Team Table Header -->
+                    <div class="flex items-center justify-between mb-2 px-1">
+                        <div class="flex items-center gap-2">
+                            ${getTeamLogoHtml(team.abbrev, "w-5 h-5")}
+                            <h4 class="text-xs font-bold text-slate-200 uppercase tracking-wider">${team.name} Box Score</h4>
+                            ${team.record ? `<span class="text-[11px] text-slate-400 font-mono">(${team.record})</span>` : ''}
+                        </div>
+                        <span class="text-[10px] text-slate-500 font-mono uppercase">Sortable Stats</span>
+                    </div>
 
-            let realGames = null;
-            try {
-                realGames = await fetchRealNbaBoxScores(state.selectedDate);
-            } catch (err) {
-                console.warn('Live API attempt failed:', err);
-            }
-
-            if (realGames && realGames.length > 0) {
-                state.games = realGames;
-                state.dataSource = 'live';
-                dateBadge.innerText = 'ESPN Live Feed';
-                dateDot.className = 'w-2 h-2 rounded-full bg-emerald-400';
-            } else {
-                state.games = generateDemoGames(state.selectedDate);
-                state.dataSource = 'demo';
-                dateBadge.innerText = 'Demo Engine';
-                dateDot.className = 'w-2 h-2 rounded-full bg-indigo-400';
-            }
-
-            // Box scores start collapsed by default
-            state.expandedGames.clear();
-            state.tableSort = {}; // Reset table sorting on date switch
-
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/New_York' };
-            const dateFormatted = new Date(state.selectedDate + 'T00:00:00').toLocaleDateString('en-US', options);
-            document.getElementById('current-slate-title').innerText = `NBA Slate — ${dateFormatted}`;
-
-            renderHeaderLegend();
-            renderTopPerformers();
-            renderLeaderboardTable();
-            renderBoxScores();
+                    <!-- Table -->
+                    <div class="overflow-x-auto border border-slate-800 rounded-xl bg-slate-900">
+                        <table class="w-full text-left text-xs whitespace-nowrap">
+                            <thead class="bg-slate-950 text-[10px] uppercase font-semibold text-slate-400 border-b border-slate-800">
+                                <tr>
+                                    <th class="py-2.5 px-3">Player</th>
+                                    <th class="py-2.5 px-2 text-center">MIN</th>
+                                    <th class="py-2.5 px-2 text-right">PTS</th>
+                                    <th class="py-2.5 px-2 text-right">REB</th>
+                                    <th class="py-2.5 px-2 text-right">AST</th>
+                                    <th class="py-2.5 px-2 text-right">STL</th>
+                                    <th class="py-2.5 px-2 text-right">BLK</th>
+                                    <th class="py-2.5 px-2 text-right">FG</th>
+                                    <th class="py-2.5 px-2 text-right">3PT</th>
+                                    <th class="py-2.5 px-2 text-right">FT</th>
+                                    <th class="py-2.5 px-2 text-right">TO</th>
+                                    <th class="py-2.5 px-2 text-right">+/-</th>
+                                    <th class="py-2.5 px-3 text-right font-bold text-amber-400">GmSc</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800/60 font-mono text-slate-300">
+                                ${team.players.map(p => `
+                                    <tr class="hover:bg-slate-850/60 transition">
+                                        <td class="py-2 px-3 font-sans font-medium text-white">${p.name}</td>
+                                        <td class="py-2 px-2 text-center text-slate-400">${p.min}'</td>
+                                        <td class="py-2 px-2 text-right font-bold text-white">${p.pts}</td>
+                                        <td class="py-2 px-2 text-right">${p.reb}</td>
+                                        <td class="py-2 px-2 text-right">${p.ast}</td>
+                                        <td class="py-2 px-2 text-right text-slate-400">${p.stl}</td>
+                                        <td class="py-2 px-2 text-right text-slate-400">${p.blk}</td>
+                                        <td class="py-2 px-2 text-right text-slate-400">${p.fgm}-${p.fga}</td>
+                                        <td class="py-2 px-2 text-right text-slate-400">${p.tpm}-${p.tpa}</td>
+                                        <td class="py-2 px-2 text-right text-slate-400">${p.ftm}-${p.fta}</td>
+                                        <td class="py-2 px-2 text-right text-slate-400">${p.tov}</td>
+                                        <td class="py-2 px-2 text-right font-medium ${p.plusMinus > 0 ? 'text-emerald-400' : p.plusMinus < 0 ? 'text-rose-400' : 'text-slate-500'}">
+                                            ${p.plusMinus > 0 ? '+' : ''}${p.plusMinus}
+                                        </td>
+                                        <td class="py-2 px-3 text-right font-bold ${p.gmSc >= 20 ? 'text-emerald-400' : p.gmSc <= 3 ? 'text-rose-400' : 'text-amber-400'}">
+                                            ${p.gmSc}
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
         }
 
-        // --- EVENT HANDLERS ---
-        function setupEventListeners() {
-            const datePicker = document.getElementById('date-picker');
-            datePicker.value = state.selectedDate;
+        // ESPN API Response Parser
+        function parseEspnData(events) {
+            return events.map(evt => {
+                const competition = evt.competitions[0];
+                const home = competition.competitors.find(c => c.homeAway === 'home');
+                const away = competition.competitors.find(c => c.homeAway === 'away');
 
-            // Light/Dark Theme Switcher logic
-            const toggleTheme = () => {
-                const nextTheme = state.theme === 'dark' ? 'light' : 'dark';
-                applyTheme(nextTheme);
-            };
-            document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
-            document.getElementById('theme-toggle-mobile').addEventListener('click', toggleTheme);
+                const statusText = evt.status.type.shortDetail || evt.status.type.detail || 'FINAL';
 
-            // Leaderboard Toggle logic (Top 10 vs Bottom 10)
-            const btnTop = document.getElementById('btn-show-top10');
-            const btnBottom = document.getElementById('btn-show-bottom10');
-
-            btnTop.addEventListener('click', () => {
-                state.leaderboardMode = 'top';
-                btnTop.className = 'px-3 py-1.5 bg-indigo-600 text-white font-medium text-xs rounded-lg shadow-sm';
-                btnBottom.className = 'px-3 py-1.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs rounded-lg transition-colors border border-slate-300 dark:border-slate-700';
-                renderLeaderboardTable();
-            });
-
-            btnBottom.addEventListener('click', () => {
-                state.leaderboardMode = 'bottom';
-                btnBottom.className = 'px-3 py-1.5 bg-red-600 text-white font-medium text-xs rounded-lg shadow-sm';
-                btnTop.className = 'px-3 py-1.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs rounded-lg transition-colors border border-slate-300 dark:border-slate-700';
-                renderLeaderboardTable();
-            });
-
-            datePicker.addEventListener('change', (e) => {
-                state.selectedDate = e.target.value;
-                loadSlateData();
-            });
-
-            document.getElementById('prev-date-btn').addEventListener('click', () => {
-                const d = new Date(state.selectedDate + 'T00:00:00');
-                d.setDate(d.getDate() - 1);
-                state.selectedDate = d.toISOString().split('T')[0];
-                datePicker.value = state.selectedDate;
-                loadSlateData();
-            });
-
-            document.getElementById('next-date-btn').addEventListener('click', () => {
-                const d = new Date(state.selectedDate + 'T00:00:00');
-                d.setDate(d.getDate() + 1);
-                state.selectedDate = d.toISOString().split('T')[0];
-                datePicker.value = state.selectedDate;
-                loadSlateData();
-            });
-
-            document.getElementById('btn-today').addEventListener('click', () => {
-                state.selectedDate = getEasternDateString(0);
-                datePicker.value = state.selectedDate;
-                loadSlateData();
-            });
-
-            document.getElementById('btn-yesterday').addEventListener('click', () => {
-                state.selectedDate = getEasternDateString(-1);
-                datePicker.value = state.selectedDate;
-                loadSlateData();
-            });
-
-            document.getElementById('next-date-btn').addEventListener('click', () => {
-                const d = new Date(state.selectedDate + 'T00:00:00');
-                d.setDate(d.getDate() + 1);
-                state.selectedDate = d.toISOString().split('T')[0];
-                datePicker.value = state.selectedDate;
-                loadSlateData();
-            });
-
-            document.getElementById('btn-today').addEventListener('click', () => {
-                state.selectedDate = new Date().toISOString().split('T')[0];
-                datePicker.value = state.selectedDate;
-                loadSlateData();
-            });
-
-            document.getElementById('btn-yesterday').addEventListener('click', () => {
-                const d = new Date();
-                d.setDate(d.getDate() - 1);
-                state.selectedDate = d.toISOString().split('T')[0];
-                datePicker.value = state.selectedDate;
-                loadSlateData();
-            });
-
-            document.getElementById('global-search').addEventListener('input', (e) => {
-                state.searchQuery = e.target.value;
-                renderBoxScores();
-            });
-
-            document.getElementById('filter-min-minutes').addEventListener('change', (e) => {
-                state.minMinutes = parseInt(e.target.value, 10);
-                renderBoxScores();
-            });
-
-            document.getElementById('filter-min-gamescore').addEventListener('change', (e) => {
-                state.minGameScore = parseFloat(e.target.value);
-                renderBoxScores();
-            });
-
-            document.getElementById('formula-select').addEventListener('change', (e) => {
-                state.formula = e.target.value;
-                renderTopPerformers();
-                renderLeaderboardTable();
-                renderBoxScores();
-            });
-
-            document.getElementById('expand-all-btn').addEventListener('click', () => {
-                state.expandedGames = new Set(state.games.map(g => g.id));
-                renderBoxScores();
-            });
-
-            document.getElementById('collapse-all-btn').addEventListener('click', () => {
-                state.expandedGames.clear();
-                renderBoxScores();
-            });
-
-            document.getElementById('reset-filters-btn').addEventListener('click', () => {
-                state.searchQuery = '';
-                state.minMinutes = 0;
-                state.minGameScore = -99;
-                document.getElementById('global-search').value = '';
-                document.getElementById('filter-min-minutes').value = '0';
-                document.getElementById('filter-min-gamescore').value = '-99';
-                loadSlateData();
-            });
-
-            // Settings Modal logic
-            const modal = document.getElementById('settings-modal');
-            const openBtn = document.getElementById('toggle-settings-btn');
-            const openMobileBtn = document.getElementById('toggle-settings-mobile-btn');
-            const closeBtn = document.getElementById('close-settings-btn');
-            const saveBtn = document.getElementById('save-settings-btn');
-
-            const toggleModal = () => modal.classList.toggle('hidden');
-            if (openBtn) openBtn.addEventListener('click', toggleModal);
-            if (openMobileBtn) openMobileBtn.addEventListener('click', toggleModal);
-            if (closeBtn) closeBtn.addEventListener('click', toggleModal);
-
-            saveBtn.addEventListener('click', () => {
-                state.thresholds.elite = parseFloat(document.getElementById('threshold-elite').value) || 20;
-                state.thresholds.good = parseFloat(document.getElementById('threshold-good').value) || 12;
-                state.thresholds.average = parseFloat(document.getElementById('threshold-avg').value) || 6;
-                state.thresholds.below = parseFloat(document.getElementById('threshold-below').value) || 1;
-                toggleModal();
-                renderHeaderLegend();
-                renderLeaderboardTable();
-                renderBoxScores();
+                return {
+                    id: evt.id,
+                    status: statusText.toUpperCase(),
+                    awayTeam: {
+                        name: away.team.displayName,
+                        abbrev: away.team.abbreviation,
+                        score: parseInt(away.score || 0),
+                        record: away.records && away.records[0] ? away.records[0].summary : '',
+                        players: extractEspnPlayers(away)
+                    },
+                    homeTeam: {
+                        name: home.team.displayName,
+                        abbrev: home.team.abbreviation,
+                        score: parseInt(home.score || 0),
+                        record: home.records && home.records[0] ? home.records[0].summary : '',
+                        players: extractEspnPlayers(home)
+                    }
+                };
             });
         }
 
-        // --- APP BOOTSTRAP ---
-        window.addEventListener('DOMContentLoaded', () => {
-            if (window.lucide) {
-                window.lucide.createIcons();
-            }
-            setupEventListeners();
-            loadSlateData();
-        });
+        function extractEspnPlayers(competitor) {
+            if (!competitor.athletes) return generateMockPlayers(competitor.team.abbreviation);
+
+            return competitor.athletes.map(a => {
+                const statsMap = {};
+                if (a.stats) {
+                    // ESPN stats array mapping
+                    a.stats.forEach((val, idx) => {
+                        statsMap[idx] = val;
+                    });
+                }
+
+                const pts = parseInt(a.stats ? a.stats[13] || 0 : 0);
+                const reb = parseInt(a.stats ? a.stats[7] || 0 : 0);
+                const ast = parseInt(a.stats ? a.stats[8] || 0 : 0);
+                const stl = parseInt(a.stats ? a.stats[9] || 0 : 0);
+                const blk = parseInt(a.stats ? a.stats[10] || 0 : 0);
+                const min = parseInt(a.stats ? a.stats[0] || 0 : 0);
+
+                const fgParts = (a.stats ? a.stats[1] || '0-0' : '0-0').split('-');
+                const fgm = parseInt(fgParts[0]) || 0;
+                const fga = parseInt(fgParts[1]) || 0;
+
+                const tpParts = (a.stats ? a.stats[2] || '0-0' : '0-0').split('-');
+                const tpm = parseInt(tpParts[0]) || 0;
+                const tpa = parseInt(tpParts[1]) || 0;
+
+                const ftParts = (a.stats ? a.stats[3] || '0-0' : '0-0').split('-');
+                const ftm = parseInt(ftParts[0]) || 0;
+                const fta = parseInt(ftParts[1]) || 0;
+
+                const tov = parseInt(a.stats ? a.stats[11] || 0 : 0);
+                const pf = parseInt(a.stats ? a.stats[12] || 0 : 0);
+                const plusMinus = parseInt(a.stats ? a.stats[14] || 0 : 0);
+
+                const gmSc = calculateGameScore({ pts, fgm, fga, ftm, fta, oreb: Math.round(reb*0.3), dreb: Math.round(reb*0.7), stl, ast, blk, pf, tov });
+
+                return {
+                    name: a.athlete.shortName || a.athlete.displayName,
+                    min, pts, reb, ast, stl, blk, fgm, fga, tpm, tpa, ftm, fta, tov, pf, plusMinus, gmSc
+                };
+            });
+        }
+
+        // Mock Data Fallback Generator
+        function generateMockGames(dateStr) {
+            const matchups = [
+                { away: { name: 'Milwaukee Bucks', abbrev: 'MIL', record: '1-10' }, home: { name: 'New York Knicks', abbrev: 'NY', record: '6-4' }, awayScore: 85, homeScore: 117, status: 'FINAL' },
+                { away: { name: 'Boston Celtics', abbrev: 'BOS', record: '9-2' }, home: { name: 'Philadelphia 76ers', abbrev: 'PHI', record: '9-3' }, awayScore: 123, homeScore: 101, status: 'FINAL' },
+                { away: { name: 'LA Clippers', abbrev: 'LAC', record: '2-7' }, home: { name: 'Phoenix Suns', abbrev: 'PHX', record: '3-6' }, awayScore: 59, homeScore: 89, status: '4:36 - 3RD' },
+                { away: { name: 'Miami Heat', abbrev: 'MIA', record: '4-6' }, home: { name: 'Utah Jazz', abbrev: 'UTAH', record: '1-9' }, awayScore: 64, homeScore: 58, status: '10:08 - 3RD' },
+                { away: { name: 'Golden State Warriors', abbrev: 'GSW', record: '8-3' }, home: { name: 'Denver Nuggets', abbrev: 'DEN', record: '7-3' }, awayScore: 0, homeScore: 0, status: '10:00 PM ET' }
+            ];
+
+            return matchups.map((m, idx) => ({
+                id: `mock-game-${idx}`,
+                status: m.status,
+                awayTeam: {
+                    ...m.away,
+                    score: m.awayScore,
+                    players: generateMockPlayers(m.away.abbrev)
+                },
+                homeTeam: {
+                    ...m.home,
+                    score: m.homeScore,
+                    players: generateMockPlayers(m.home.abbrev)
+                }
+            }));
+        }
+
+        function generateMockPlayers(teamCode) {
+            const names = [
+                "J. Tatum", "J. Brown", "D. White", "J. Holiday", "A. Horford",
+                "P. Pritchard", "S. Hauser", "L. Kornet", "X. Tillman", "O. Brissett"
+            ];
+
+            return names.map((name, i) => {
+                const min = i < 5 ? 30 + Math.floor(Math.random() * 8) : 10 + Math.floor(Math.random() * 12);
+                const pts = i === 0 ? 32 : i === 1 ? 24 : Math.floor(Math.random() * 15);
+                const reb = Math.floor(Math.random() * 10);
+                const ast = Math.floor(Math.random() * 8);
+                const stl = Math.floor(Math.random() * 3);
+                const blk = Math.floor(Math.random() * 2);
+                const fgm = Math.floor(pts / 2.2);
+                const fga = fgm + Math.floor(Math.random() * 5);
+                const tpm = Math.floor(Math.random() * 4);
+                const tpa = tpm + Math.floor(Math.random() * 3);
+                const ftm = Math.floor(Math.random() * 6);
+                const fta = ftm + Math.floor(Math.random() * 2);
+                const tov = Math.floor(Math.random() * 4);
+                const pf = Math.floor(Math.random() * 4);
+                const plusMinus = Math.floor(Math.random() * 26) - 13;
+
+                const gmSc = calculateGameScore({ pts, fgm, fga, ftm, fta, oreb: 2, dreb: reb, stl, ast, blk, pf, tov });
+
+                return { name, min, pts, reb, ast, stl, blk, fgm, fga, tpm, tpa, ftm, fta, tov, pf, plusMinus, gmSc };
+            });
+        }
     </script>
 </body>
 </html>
