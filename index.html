@@ -471,17 +471,17 @@
             const top10 = allPlayers.slice(0, 10);
             const topTbody = document.getElementById('top-performers-tbody');
             topTbody.innerHTML = top10.map((p, i) => `
-                <tr class="${i % 2 === 0 ? 'bg-slate-900/40' : 'bg-slate-950/40'} hover:bg-slate-800/80 transition">
-                    <td class="py-1.5 px-2 font-mono text-slate-500">${i + 1}</td>
-                    <td class="py-1.5 px-2 font-medium text-white flex items-center gap-1.5">
+                <tr class="${i % 2 === 0 ? 'bg-slate-50 dark:bg-slate-900/40' : 'bg-white dark:bg-slate-950/40'} hover:bg-slate-100 dark:hover:bg-slate-800/80 transition">
+                    <td class="py-1.5 px-2 font-mono text-slate-500 dark:text-slate-400 font-semibold">${i + 1}</td>
+                    <td class="py-1.5 px-2 font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                         ${getTeamLogoHtml(p.team, "w-3.5 h-3.5")}
                         ${p.name}
                     </td>
-                    <td class="py-1.5 px-2 text-center text-slate-400 font-mono">${p.team}</td>
-                    <td class="py-1.5 px-2 text-right font-semibold text-slate-200">${p.pts}</td>
-                    <td class="py-1.5 px-2 text-right text-slate-400">${p.reb}</td>
-                    <td class="py-1.5 px-2 text-right text-slate-400">${p.ast}</td>
-                    <td class="py-1.5 px-2 text-right font-bold text-emerald-400 font-mono">${p.gmSc}</td>
+                    <td class="py-1.5 px-2 text-center text-slate-600 dark:text-slate-400 font-mono font-semibold">${p.team}</td>
+                    <td class="py-1.5 px-2 text-right font-black text-slate-900 dark:text-slate-100">${p.pts}</td>
+                    <td class="py-1.5 px-2 text-right text-slate-700 dark:text-slate-300 font-medium">${p.reb}</td>
+                    <td class="py-1.5 px-2 text-right text-slate-700 dark:text-slate-300 font-medium">${p.ast}</td>
+                    <td class="py-1.5 px-2 text-right font-black text-emerald-600 dark:text-emerald-400 font-mono">${p.gmSc}</td>
                 </tr>
             `).join('');
 
@@ -491,17 +491,17 @@
             const bottom10 = eligibleBottom.slice(0, 10);
             const bottomTbody = document.getElementById('bottom-performers-tbody');
             bottomTbody.innerHTML = bottom10.map((p, i) => `
-                <tr class="${i % 2 === 0 ? 'bg-slate-900/40' : 'bg-slate-950/40'} hover:bg-slate-800/80 transition">
-                    <td class="py-1.5 px-2 font-mono text-slate-500">${i + 1}</td>
-                    <td class="py-1.5 px-2 font-medium text-white flex items-center gap-1.5">
+                <tr class="${i % 2 === 0 ? 'bg-slate-50 dark:bg-slate-900/40' : 'bg-white dark:bg-slate-950/40'} hover:bg-slate-100 dark:hover:bg-slate-800/80 transition">
+                    <td class="py-1.5 px-2 font-mono text-slate-500 dark:text-slate-400 font-semibold">${i + 1}</td>
+                    <td class="py-1.5 px-2 font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                         ${getTeamLogoHtml(p.team, "w-3.5 h-3.5")}
                         ${p.name}
                     </td>
-                    <td class="py-1.5 px-2 text-center text-slate-400 font-mono">${p.team}</td>
-                    <td class="py-1.5 px-2 text-right font-semibold text-slate-200">${p.pts}</td>
-                    <td class="py-1.5 px-2 text-right text-slate-400">${p.reb}</td>
-                    <td class="py-1.5 px-2 text-right text-slate-400">${p.ast}</td>
-                    <td class="py-1.5 px-2 text-right font-bold text-rose-400 font-mono">${p.gmSc}</td>
+                    <td class="py-1.5 px-2 text-center text-slate-600 dark:text-slate-400 font-mono font-semibold">${p.team}</td>
+                    <td class="py-1.5 px-2 text-right font-black text-slate-900 dark:text-slate-100">${p.pts}</td>
+                    <td class="py-1.5 px-2 text-right text-slate-700 dark:text-slate-300 font-medium">${p.reb}</td>
+                    <td class="py-1.5 px-2 text-right text-slate-700 dark:text-slate-300 font-medium">${p.ast}</td>
+                    <td class="py-1.5 px-2 text-right font-black text-rose-600 dark:text-rose-400 font-mono">${p.gmSc}</td>
                 </tr>
             `).join('');
         }
