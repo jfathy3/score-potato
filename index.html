@@ -70,26 +70,19 @@
                     <i id="icon-theme-moon" data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
                 </button>
 
-                <!-- Quick Date Selector -->
+                <!-- Quick Date Navigation -->
                 <div class="flex items-center bg-slate-200 dark:bg-slate-800 p-1 rounded-lg border border-slate-300 dark:border-slate-700">
                     <button id="btn-prev-day" title="Previous Day" class="p-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-md hover:bg-slate-300 dark:hover:bg-slate-700 transition">
                         <i data-lucide="chevron-left" class="w-4 h-4"></i>
                     </button>
                     
-                    <button id="btn-yesterday" class="px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-md hover:bg-slate-300 dark:hover:bg-slate-700 transition">
-                        Yesterday
-                    </button>
-                    <button id="btn-today" class="px-2.5 py-1 text-xs font-semibold text-white bg-indigo-600 rounded-md shadow-sm transition">
-                        Today
-                    </button>
+                    <!-- Custom Date Input -->
+                    <input type="date" id="date-picker" class="bg-transparent text-slate-800 dark:text-slate-200 text-xs font-semibold px-2 py-1 focus:outline-none cursor-pointer">
 
                     <button id="btn-next-day" title="Next Day" class="p-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-md hover:bg-slate-300 dark:hover:bg-slate-700 transition">
                         <i data-lucide="chevron-right" class="w-4 h-4"></i>
                     </button>
                 </div>
-
-                <!-- Custom Date Input -->
-                <input type="date" id="date-picker" class="bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none hidden md:block">
 
                 <!-- Expand/Collapse All Toggle -->
                 <button id="btn-toggle-all-games" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium rounded-lg border border-slate-300 dark:border-slate-700 transition flex items-center gap-1.5">
@@ -140,60 +133,77 @@
             </button>
 
             <!-- Leaderboard Content Body -->
-            <div id="leaderboard-content" class="hidden p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 bg-slate-50 dark:bg-slate-900/50">
-                <!-- Top 10 Performers -->
-                <div class="bg-white dark:bg-slate-950/60 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
-                    <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-slate-800">
-                        <h4 class="text-xs font-bold tracking-wider text-emerald-600 dark:text-emerald-400 uppercase flex items-center gap-1.5">
-                            <i data-lucide="trending-up" class="w-3.5 h-3.5"></i> Top 10 Game Scores
-                        </h4>
-                        <span class="text-[10px] text-slate-400 uppercase font-mono">GmSc Formula</span>
+            <div id="leaderboard-content" class="hidden p-4 sm:p-6 space-y-6 bg-slate-50 dark:bg-slate-900/50">
+                
+                <!-- Formula & Criteria Explanation Card -->
+                <div class="bg-indigo-50/70 dark:bg-slate-950/80 border border-indigo-100 dark:border-slate-800 rounded-xl p-3.5 text-xs text-slate-600 dark:text-slate-400">
+                    <div class="flex items-center gap-2 font-bold text-indigo-900 dark:text-indigo-300 mb-1">
+                        <i data-lucide="calculator" class="w-4 h-4 text-indigo-500"></i>
+                        <span>GameScore (GmSc) Formula & Leaderboard Rules</span>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs">
-                            <thead class="text-[10px] uppercase text-slate-500 bg-slate-100 dark:bg-slate-900/80">
-                                <tr>
-                                    <th class="py-2 px-2">#</th>
-                                    <th class="py-2 px-2">Player</th>
-                                    <th class="py-2 px-2 text-center">Team</th>
-                                    <th class="py-2 px-2 text-right">PTS</th>
-                                    <th class="py-2 px-2 text-right">REB</th>
-                                    <th class="py-2 px-2 text-right">AST</th>
-                                    <th class="py-2 px-2 text-right font-bold text-emerald-600 dark:text-emerald-400">GmSc</th>
-                                </tr>
-                            </thead>
-                            <tbody id="top-performers-tbody" class="divide-y divide-slate-200 dark:divide-slate-800/40 text-slate-700 dark:text-slate-300">
-                                <!-- Populated dynamically -->
-                            </tbody>
-                        </table>
+                    <p class="mb-2 leading-relaxed">
+                        <strong class="text-slate-800 dark:text-slate-200">Formula:</strong> <code class="font-mono bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400">PTS + 0.4×FGM - 0.7×FGA - 0.4×(FTA - FTM) + 0.7×OREB + 0.3×DREB + STL + 0.7×AST + 0.7×BLK - 0.4×PF - TOV</code>
+                    </p>
+                    <div class="flex flex-wrap items-center gap-4 text-[11px]">
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> <strong>25+ GmSc:</strong> Elite Performance</span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> <strong>&lt; 0 GmSc:</strong> Rough Game</span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span> <strong>Bottom 10 Requirement:</strong> Minimum 15 Minutes Played</span>
                     </div>
                 </div>
 
-                <!-- Bottom 10 Performers -->
-                <div class="bg-white dark:bg-slate-950/60 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
-                    <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-slate-800">
-                        <h4 class="text-xs font-bold tracking-wider text-rose-600 dark:text-rose-400 uppercase flex items-center gap-1.5">
-                            <i data-lucide="trending-down" class="w-3.5 h-3.5"></i> Bottom 10 Game Scores
-                        </h4>
-                        <span class="text-[10px] text-slate-400 uppercase font-mono">Min 15 Mins</span>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Top 10 Performers -->
+                    <div class="bg-white dark:bg-slate-950/60 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
+                        <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-slate-800">
+                            <h4 class="text-xs font-bold tracking-wider text-emerald-600 dark:text-emerald-400 uppercase flex items-center gap-1.5">
+                                <i data-lucide="trending-up" class="w-3.5 h-3.5"></i> Top 10 Game Scores
+                            </h4>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="text-[10px] uppercase text-slate-500 bg-slate-100 dark:bg-slate-900/80">
+                                    <tr>
+                                        <th class="py-2 px-2">#</th>
+                                        <th class="py-2 px-2">Player</th>
+                                        <th class="py-2 px-2 text-center">Team</th>
+                                        <th class="py-2 px-2 text-right">PTS</th>
+                                        <th class="py-2 px-2 text-right">REB</th>
+                                        <th class="py-2 px-2 text-right">AST</th>
+                                        <th class="py-2 px-2 text-right font-bold text-emerald-600 dark:text-emerald-400">GmSc</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="top-performers-tbody" class="divide-y divide-slate-200 dark:divide-slate-800/40 text-slate-700 dark:text-slate-300">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs">
-                            <thead class="text-[10px] uppercase text-slate-500 bg-slate-100 dark:bg-slate-900/80">
-                                <tr>
-                                    <th class="py-2 px-2">#</th>
-                                    <th class="py-2 px-2">Player</th>
-                                    <th class="py-2 px-2 text-center">Team</th>
-                                    <th class="py-2 px-2 text-right">PTS</th>
-                                    <th class="py-2 px-2 text-right">REB</th>
-                                    <th class="py-2 px-2 text-right">AST</th>
-                                    <th class="py-2 px-2 text-right font-bold text-rose-600 dark:text-rose-400">GmSc</th>
-                                </tr>
-                            </thead>
-                            <tbody id="bottom-performers-tbody" class="divide-y divide-slate-200 dark:divide-slate-800/40 text-slate-700 dark:text-slate-300">
-                                <!-- Populated dynamically -->
-                            </tbody>
-                        </table>
+
+                    <!-- Bottom 10 Performers -->
+                    <div class="bg-white dark:bg-slate-950/60 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
+                        <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200 dark:border-slate-800">
+                            <h4 class="text-xs font-bold tracking-wider text-rose-600 dark:text-rose-400 uppercase flex items-center gap-1.5">
+                                <i data-lucide="trending-down" class="w-3.5 h-3.5"></i> Bottom 10 Game Scores
+                            </h4>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="text-[10px] uppercase text-slate-500 bg-slate-100 dark:bg-slate-900/80">
+                                    <tr>
+                                        <th class="py-2 px-2">#</th>
+                                        <th class="py-2 px-2">Player</th>
+                                        <th class="py-2 px-2 text-center">Team</th>
+                                        <th class="py-2 px-2 text-right">PTS</th>
+                                        <th class="py-2 px-2 text-right">REB</th>
+                                        <th class="py-2 px-2 text-right">AST</th>
+                                        <th class="py-2 px-2 text-right font-bold text-rose-600 dark:text-rose-400">GmSc</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bottom-performers-tbody" class="divide-y divide-slate-200 dark:divide-slate-800/40 text-slate-700 dark:text-slate-300">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -287,20 +297,6 @@
                 }
             });
 
-            document.getElementById('btn-today').addEventListener('click', () => {
-                state.selectedDate = getTodayNYString();
-                datePicker.value = state.selectedDate;
-                fetchSlateData(state.selectedDate);
-            });
-
-            document.getElementById('btn-yesterday').addEventListener('click', () => {
-                const date = new Date(state.selectedDate + 'T12:00:00');
-                date.setDate(date.getDate() - 1);
-                state.selectedDate = date.toISOString().split('T')[0];
-                datePicker.value = state.selectedDate;
-                fetchSlateData(state.selectedDate);
-            });
-
             document.getElementById('btn-prev-day').addEventListener('click', () => {
                 const date = new Date(state.selectedDate + 'T12:00:00');
                 date.setDate(date.getDate() - 1);
@@ -359,7 +355,6 @@
             renderLoadingState();
 
             const formattedDate = dateStr.replace(/-/g, '');
-            const espnUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=`; // Summary endpoint per event OR scoreboard
             const scoreboardUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${formattedDate}`;
 
             try {
@@ -378,11 +373,11 @@
                         }
                     }));
                 } else {
-                    state.games = generateMockGames(dateStr);
+                    state.games = [];
                 }
             } catch (err) {
-                console.warn('Live API fetch failed, loading generated slate mock:', err);
-                state.games = generateMockGames(dateStr);
+                console.warn('Live API fetch failed:', err);
+                state.games = [];
             }
 
             state.loading = false;
@@ -458,18 +453,39 @@
         function renderTopPerformers() {
             const allPlayers = [];
             state.games.forEach(g => {
-                g.awayTeam.players.forEach(p => {
-                    allPlayers.push({ ...p, team: g.awayTeam.abbrev, gameStatus: g.status });
-                });
-                g.homeTeam.players.forEach(p => {
-                    allPlayers.push({ ...p, team: g.homeTeam.abbrev, gameStatus: g.status });
-                });
+                if (g.awayTeam && g.awayTeam.players) {
+                    g.awayTeam.players.forEach(p => {
+                        allPlayers.push({ ...p, team: g.awayTeam.abbrev, gameStatus: g.status });
+                    });
+                }
+                if (g.homeTeam && g.homeTeam.players) {
+                    g.homeTeam.players.forEach(p => {
+                        allPlayers.push({ ...p, team: g.homeTeam.abbrev, gameStatus: g.status });
+                    });
+                }
             });
+
+            const topTbody = document.getElementById('top-performers-tbody');
+            const bottomTbody = document.getElementById('bottom-performers-tbody');
+
+            if (allPlayers.length === 0) {
+                const emptyRow = `
+                    <tr>
+                        <td colspan="7" class="py-8 text-center text-slate-400 dark:text-slate-500">
+                            <i data-lucide="clock" class="w-5 h-5 mx-auto mb-1 opacity-60"></i>
+                            <span>No active box score stats for this date yet.</span>
+                        </td>
+                    </tr>
+                `;
+                topTbody.innerHTML = emptyRow;
+                bottomTbody.innerHTML = emptyRow;
+                lucide.createIcons();
+                return;
+            }
 
             allPlayers.sort((a, b) => b.gmSc - a.gmSc);
 
             const top10 = allPlayers.slice(0, 10);
-            const topTbody = document.getElementById('top-performers-tbody');
             topTbody.innerHTML = top10.map((p, i) => `
                 <tr class="${i % 2 === 0 ? 'bg-slate-50 dark:bg-slate-900/40' : 'bg-white dark:bg-slate-950/40'} hover:bg-slate-100 dark:hover:bg-slate-800/80 transition">
                     <td class="py-1.5 px-2 font-mono text-slate-500 dark:text-slate-400 font-semibold">${i + 1}</td>
@@ -489,21 +505,30 @@
             eligibleBottom.sort((a, b) => a.gmSc - b.gmSc);
 
             const bottom10 = eligibleBottom.slice(0, 10);
-            const bottomTbody = document.getElementById('bottom-performers-tbody');
-            bottomTbody.innerHTML = bottom10.map((p, i) => `
-                <tr class="${i % 2 === 0 ? 'bg-slate-50 dark:bg-slate-900/40' : 'bg-white dark:bg-slate-950/40'} hover:bg-slate-100 dark:hover:bg-slate-800/80 transition">
-                    <td class="py-1.5 px-2 font-mono text-slate-500 dark:text-slate-400 font-semibold">${i + 1}</td>
-                    <td class="py-1.5 px-2 font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                        ${getTeamLogoHtml(p.team, "w-3.5 h-3.5")}
-                        ${p.name}
-                    </td>
-                    <td class="py-1.5 px-2 text-center text-slate-600 dark:text-slate-400 font-mono font-semibold">${p.team}</td>
-                    <td class="py-1.5 px-2 text-right font-black text-slate-900 dark:text-slate-100">${p.pts}</td>
-                    <td class="py-1.5 px-2 text-right text-slate-700 dark:text-slate-300 font-medium">${p.reb}</td>
-                    <td class="py-1.5 px-2 text-right text-slate-700 dark:text-slate-300 font-medium">${p.ast}</td>
-                    <td class="py-1.5 px-2 text-right font-black text-rose-600 dark:text-rose-400 font-mono">${p.gmSc}</td>
-                </tr>
-            `).join('');
+            if (bottom10.length === 0) {
+                bottomTbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="py-6 text-center text-slate-400 dark:text-slate-500">
+                            No players with 15+ minutes played yet.
+                        </td>
+                    </tr>
+                `;
+            } else {
+                bottomTbody.innerHTML = bottom10.map((p, i) => `
+                    <tr class="${i % 2 === 0 ? 'bg-slate-50 dark:bg-slate-900/40' : 'bg-white dark:bg-slate-950/40'} hover:bg-slate-100 dark:hover:bg-slate-800/80 transition">
+                        <td class="py-1.5 px-2 font-mono text-slate-500 dark:text-slate-400 font-semibold">${i + 1}</td>
+                        <td class="py-1.5 px-2 font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                            ${getTeamLogoHtml(p.team, "w-3.5 h-3.5")}
+                            ${p.name}
+                        </td>
+                        <td class="py-1.5 px-2 text-center text-slate-600 dark:text-slate-400 font-mono font-semibold">${p.team}</td>
+                        <td class="py-1.5 px-2 text-right font-black text-slate-900 dark:text-slate-100">${p.pts}</td>
+                        <td class="py-1.5 px-2 text-right text-slate-700 dark:text-slate-300 font-medium">${p.reb}</td>
+                        <td class="py-1.5 px-2 text-right text-slate-700 dark:text-slate-300 font-medium">${p.ast}</td>
+                        <td class="py-1.5 px-2 text-right font-black text-rose-600 dark:text-rose-400 font-mono">${p.gmSc}</td>
+                    </tr>
+                `).join('');
+            }
         }
 
         function renderGames() {
@@ -619,22 +644,22 @@
                             </thead>
                             <tbody class="divide-y divide-slate-100 dark:divide-slate-800/40 font-mono text-slate-700 dark:text-slate-300">
                                 ${sortedPlayers.map((p, idx) => {
-                                    // Highlights / Heatmap thresholds for GameScore
+                                    // High-contrast neon-glow highlights for Dark Mode and vivid tints for Light Mode
                                     let gmScClass = "text-amber-700 dark:text-amber-400 font-bold";
                                     let rowBgClass = idx % 2 === 0 ? "bg-white dark:bg-slate-900" : "bg-slate-100/80 dark:bg-slate-950/70";
 
                                     if (p.gmSc >= 25) {
-                                        gmScClass = "text-emerald-950 dark:text-emerald-300 font-black text-sm drop-shadow-sm";
-                                        rowBgClass = "bg-emerald-200/90 dark:bg-emerald-950/80 border-l-4 border-l-emerald-600 dark:border-l-emerald-400 shadow-inner";
+                                        gmScClass = "text-emerald-950 dark:text-emerald-200 font-black text-sm drop-shadow";
+                                        rowBgClass = "bg-emerald-200/90 dark:bg-emerald-950 dark:border-l-4 dark:border-l-emerald-400 dark:ring-1 dark:ring-emerald-500/50 shadow-inner";
                                     } else if (p.gmSc >= 18) {
-                                        gmScClass = "text-emerald-900 dark:text-emerald-400 font-extrabold";
-                                        rowBgClass = "bg-emerald-100 dark:bg-emerald-950/50 border-l-4 border-l-emerald-500/70";
+                                        gmScClass = "text-emerald-900 dark:text-emerald-300 font-extrabold";
+                                        rowBgClass = "bg-emerald-100 dark:bg-emerald-950/70 dark:border-l-4 dark:border-l-emerald-500";
                                     } else if (p.gmSc <= 2) {
-                                        gmScClass = "text-rose-900 dark:text-rose-300 font-extrabold";
+                                        gmScClass = "text-rose-900 dark:text-rose-200 font-extrabold";
                                         if (p.gmSc < 0) {
-                                            rowBgClass = "bg-rose-200/90 dark:bg-rose-950/80 border-l-4 border-l-rose-600 dark:border-l-rose-400 shadow-inner";
+                                            rowBgClass = "bg-rose-200/90 dark:bg-rose-950 dark:border-l-4 dark:border-l-rose-400 dark:ring-1 dark:ring-rose-500/50 shadow-inner";
                                         } else {
-                                            rowBgClass = "bg-rose-100 dark:bg-rose-950/50 border-l-4 border-l-rose-500/70";
+                                            rowBgClass = "bg-rose-100 dark:bg-rose-950/70 dark:border-l-4 dark:border-l-rose-500";
                                         }
                                     }
 
@@ -671,7 +696,7 @@
             const competition = evt.competitions[0];
             const home = competition.competitors.find(c => c.homeAway === 'home');
             const away = competition.competitors.find(c => c.homeAway === 'away');
-            const statusText = evt.status.type.shortDetail || evt.status.type.detail || 'FINAL';
+            const statusText = evt.status.type.shortDetail || evt.status.type.detail || 'SCHEDULED';
 
             let awayPlayers = [];
             let homePlayers = [];
@@ -687,10 +712,6 @@
                     }
                 });
             }
-
-            // Fallback if summary boxscore array was empty
-            if (awayPlayers.length === 0) awayPlayers = generateMockPlayers(away.team.abbreviation);
-            if (homePlayers.length === 0) homePlayers = generateMockPlayers(home.team.abbreviation);
 
             return {
                 id: evt.id,
@@ -708,6 +729,32 @@
                     score: parseInt(home.score || 0),
                     record: home.records && home.records[0] ? home.records[0].summary : '',
                     players: homePlayers
+                }
+            };
+        }
+
+        function parseEspnScoreboardEvent(evt) {
+            const competition = evt.competitions[0];
+            const home = competition.competitors.find(c => c.homeAway === 'home');
+            const away = competition.competitors.find(c => c.homeAway === 'away');
+            const statusText = evt.status.type.shortDetail || evt.status.type.detail || 'SCHEDULED';
+
+            return {
+                id: evt.id,
+                status: statusText.toUpperCase(),
+                awayTeam: {
+                    name: away.team.displayName,
+                    abbrev: away.team.abbreviation,
+                    score: parseInt(away.score || 0),
+                    record: away.records && away.records[0] ? away.records[0].summary : '',
+                    players: []
+                },
+                homeTeam: {
+                    name: home.team.displayName,
+                    abbrev: home.team.abbreviation,
+                    score: parseInt(home.score || 0),
+                    record: home.records && home.records[0] ? home.records[0].summary : '',
+                    players: []
                 }
             };
         }
