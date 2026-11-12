@@ -691,6 +691,7 @@
 
                     ${isExpanded ? `
                         <div class="border-t border-slate-200 dark:border-slate-800 p-4 sm:p-6 bg-slate-50 dark:bg-slate-950/40 space-y-6">
+                            ${renderQuarterLinescore(game)}
                             ${renderTeamBoxTable(game.awayTeam, game.id)}
                             ${renderTeamBoxTable(game.homeTeam, game.id)}
                         </div>
@@ -701,6 +702,52 @@
             });
 
             lucide.createIcons();
+        }
+
+        // Render compact Quarter-by-Quarter Linescore table
+        function renderQuarterLinescore(game) {
+            const awayLines = game.awayTeam.linescores || [];
+            const homeLines = game.homeTeam.linescores || [];
+            const numPeriods = Math.max(awayLines.length, homeLines.length);
+
+            if (numPeriods === 0) return '';
+
+            const periodHeaders = [];
+            for (let i = 0; i < numPeriods; i++) {
+                periodHeaders.push(i < 4 ? `Q${i + 1}` : `OT${i - 3}`);
+            }
+
+            return `
+                <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm max-w-lg mx-auto">
+                    <table class="w-full text-xs font-mono">
+                        <thead class="bg-slate-100 dark:bg-slate-950 text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                            <tr>
+                                <th class="py-2 px-3 text-left font-sans">Team</th>
+                                ${periodHeaders.map(h => `<th class="py-2 px-2.5 text-center">${h}</th>`).join('')}
+                                <th class="py-2 px-3 text-right font-bold text-slate-800 dark:text-slate-200">T</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800/40">
+                            <tr>
+                                <td class="py-2 px-3 font-sans font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                    ${getTeamLogoHtml(game.awayTeam.abbrev, "w-4 h-4")}
+                                    <span>${game.awayTeam.abbrev}</span>
+                                </td>
+                                ${periodHeaders.map((_, idx) => `<td class="py-2 px-2.5 text-center text-slate-600 dark:text-slate-300">${awayLines[idx] !== undefined ? awayLines[idx] : '-'}</td>`).join('')}
+                                <td class="py-2 px-3 text-right font-extrabold ${game.awayTeam.score >= game.homeTeam.score ? 'text-amber-600 dark:text-amber-400' : 'text-slate-900 dark:text-white'}">${game.awayTeam.score}</td>
+                            </tr>
+                            <tr>
+                                <td class="py-2 px-3 font-sans font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                    ${getTeamLogoHtml(game.homeTeam.abbrev, "w-4 h-4")}
+                                    <span>${game.homeTeam.abbrev}</span>
+                                </td>
+                                ${periodHeaders.map((_, idx) => `<td class="py-2 px-2.5 text-center text-slate-600 dark:text-slate-300">${homeLines[idx] !== undefined ? homeLines[idx] : '-'}</td>`).join('')}
+                                <td class="py-2 px-3 text-right font-extrabold ${game.homeTeam.score >= game.awayTeam.score ? 'text-amber-600 dark:text-amber-400' : 'text-slate-900 dark:text-white'}">${game.homeTeam.score}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
         }
 
         // Global sort state per team/game table
@@ -851,6 +898,9 @@
                 });
             }
 
+            const awayLinescores = (away.linescores || []).map(l => parseInt(l.value ?? l.displayValue ?? 0));
+            const homeLinescores = (home.linescores || []).map(l => parseInt(l.value ?? l.displayValue ?? 0));
+
             return {
                 id: evt.id,
                 status: statusText.toUpperCase(),
@@ -859,6 +909,7 @@
                     abbrev: away.team.abbreviation,
                     score: parseInt(away.score || 0),
                     record: away.records && away.records[0] ? away.records[0].summary : '',
+                    linescores: awayLinescores,
                     players: awayPlayers
                 },
                 homeTeam: {
@@ -866,6 +917,7 @@
                     abbrev: home.team.abbreviation,
                     score: parseInt(home.score || 0),
                     record: home.records && home.records[0] ? home.records[0].summary : '',
+                    linescores: homeLinescores,
                     players: homePlayers
                 }
             };
@@ -877,6 +929,9 @@
             const away = competition.competitors.find(c => c.homeAway === 'away');
             const statusText = evt.status.type.shortDetail || evt.status.type.detail || 'SCHEDULED';
 
+            const awayLinescores = (away.linescores || []).map(l => parseInt(l.value ?? l.displayValue ?? 0));
+            const homeLinescores = (home.linescores || []).map(l => parseInt(l.value ?? l.displayValue ?? 0));
+
             return {
                 id: evt.id,
                 status: statusText.toUpperCase(),
@@ -885,6 +940,7 @@
                     abbrev: away.team.abbreviation,
                     score: parseInt(away.score || 0),
                     record: away.records && away.records[0] ? away.records[0].summary : '',
+                    linescores: awayLinescores,
                     players: []
                 },
                 homeTeam: {
@@ -892,6 +948,7 @@
                     abbrev: home.team.abbreviation,
                     score: parseInt(home.score || 0),
                     record: home.records && home.records[0] ? home.records[0].summary : '',
+                    linescores: homeLinescores,
                     players: []
                 }
             };
