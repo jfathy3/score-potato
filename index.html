@@ -240,6 +240,44 @@
 
     </main>
 
+    <!-- Player Quick-View Modal -->
+    <div id="player-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-6 bg-slate-950/70 backdrop-blur-sm transition-opacity">
+        <div id="player-modal-card" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <!-- Modal Header -->
+            <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/60">
+                <div class="flex items-center gap-3.5 min-w-0">
+                    <div id="modal-player-avatar" class="w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                        <!-- Headshot injected dynamically -->
+                    </div>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h3 id="modal-player-name" class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white truncate">Player Name</h3>
+                            <span id="modal-player-badge" class="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">TEAM</span>
+                        </div>
+                        <p id="modal-player-meta" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">Loading player bio...</p>
+                    </div>
+                </div>
+                <button id="btn-close-player-modal" title="Close (Esc)" class="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition flex-shrink-0 ml-2">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div id="modal-player-body" class="p-5 overflow-y-auto space-y-5 text-xs">
+                <!-- Content injected dynamically -->
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-5 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                <span>Click outside or press <kbd class="px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded font-mono text-[10px]">Esc</kbd> to close</span>
+                <a id="modal-espn-link" href="#" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                    <span>View ESPN Game Log</span>
+                    <i data-lucide="external-link" class="w-3 h-3"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- Application Script Logic -->
     <script>
         // Global State
@@ -252,7 +290,6 @@
         };
 
         function setupTheme() {
-            // Light mode by default unless saved otherwise
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark') {
                 document.documentElement.classList.add('dark');
@@ -308,29 +345,23 @@
             setupTheme();
             lucide.createIcons();
             setupEventListeners();
-            // Automatically initialize with smart recent date with games
             initSmartDefaultDate();
         });
 
-        // Smart initialization: defaults to today if games are live/final, otherwise finds most recent past date with games
         async function initSmartDefaultDate() {
             const todayStr = getTodayNYString();
             state.selectedDate = todayStr;
             document.getElementById('date-picker').value = state.selectedDate;
 
-            // First check today
             await fetchSlateData(state.selectedDate, true);
 
-            // If today has 0 games or all games are strictly scheduled (none live or final), check yesterday
             const hasActiveOrFinishedGames = state.games.some(g => !g.status.includes('ET') && !g.status.includes('PM') && !g.status.includes('AM') && !g.status.includes('SCHEDULED'));
             
             if (state.games.length === 0 || !hasActiveOrFinishedGames) {
-                // Check up to 3 days back for recent action
                 let checkDate = new Date(todayStr + 'T12:00:00');
                 for (let i = 1; i <= 3; i++) {
                     checkDate.setDate(checkDate.getDate() - 1);
                     const pastDateStr = checkDate.toISOString().split('T')[0];
-                    
                     const pastFormatted = pastDateStr.replace(/-/g, '');
                     try {
                         const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${pastFormatted}`);
@@ -341,9 +372,7 @@
                             await fetchSlateData(state.selectedDate, false);
                             break;
                         }
-                    } catch (e) {
-                        // continue checking
-                    }
+                    } catch (e) {}
                 }
             }
         }
@@ -387,9 +416,20 @@
                 state.isLeaderboardExpanded = !state.isLeaderboardExpanded;
                 updateLeaderboardVisibility();
             });
+
+            // Player Quick-View Modal Close Handlers
+            const playerModal = document.getElementById('player-modal');
+            document.getElementById('btn-close-player-modal').addEventListener('click', closePlayerModal);
+            playerModal.addEventListener('click', (e) => {
+                if (e.target === playerModal) closePlayerModal();
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !playerModal.classList.contains('hidden')) {
+                    closePlayerModal();
+                }
+            });
         }
 
-        // Toggle individual game card expand/collapse state
         function toggleGameCard(gameId) {
             if (state.expandedGames.has(gameId)) {
                 state.expandedGames.delete(gameId);
@@ -423,7 +463,6 @@
                 const data = await res.json();
                 
                 if (data && data.events && data.events.length > 0) {
-                    // Fetch full box scores for each event asynchronously
                     state.games = await Promise.all(data.events.map(async (evt) => {
                         try {
                             const summaryRes = await fetch(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${evt.id}`);
@@ -498,17 +537,30 @@
             });
         }
 
-        function scrollToGame(gameId) {
+        function scrollToGame(gameId, playerName = null) {
             state.expandedGames.add(gameId);
             renderGames();
             setTimeout(() => {
-                const el = document.getElementById(`game-card-${gameId}`);
-                if (el) {
-                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    el.classList.add('ring-2', 'ring-indigo-500');
-                    setTimeout(() => el.classList.remove('ring-2', 'ring-indigo-500'), 2000);
+                const gameEl = document.getElementById(`game-card-${gameId}`);
+                if (gameEl) {
+                    if (playerName) {
+                        const rows = gameEl.querySelectorAll('tr[data-player-name]');
+                        for (const row of rows) {
+                            if (row.dataset.playerName === playerName) {
+                                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                row.classList.add('ring-2', 'ring-indigo-500', 'bg-indigo-500/20');
+                                setTimeout(() => {
+                                    row.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-500/20');
+                                }, 2500);
+                                return;
+                            }
+                        }
+                    }
+                    gameEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    gameEl.classList.add('ring-2', 'ring-indigo-500');
+                    setTimeout(() => gameEl.classList.remove('ring-2', 'ring-indigo-500'), 2000);
                 }
-            }, 50);
+            }, 60);
         }
 
         function renderTopPerformers() {
@@ -516,12 +568,12 @@
             state.games.forEach(g => {
                 if (g.awayTeam && g.awayTeam.players) {
                     g.awayTeam.players.forEach(p => {
-                        allPlayers.push({ ...p, team: g.awayTeam.abbrev, gameStatus: g.status });
+                        allPlayers.push({ ...p, team: g.awayTeam.abbrev, gameId: g.id, gameStatus: g.status });
                     });
                 }
                 if (g.homeTeam && g.homeTeam.players) {
                     g.homeTeam.players.forEach(p => {
-                        allPlayers.push({ ...p, team: g.homeTeam.abbrev, gameStatus: g.status });
+                        allPlayers.push({ ...p, team: g.homeTeam.abbrev, gameId: g.id, gameStatus: g.status });
                     });
                 }
             });
@@ -548,7 +600,7 @@
 
             const top10 = allPlayers.slice(0, 10);
             topTbody.innerHTML = top10.map((p, i) => `
-                <tr class="${i % 2 === 0 ? 'bg-slate-50 dark:bg-slate-900/40' : 'bg-white dark:bg-slate-950/40'} hover:bg-slate-100 dark:hover:bg-slate-800/80 transition">
+                <tr onclick="scrollToGame('${p.gameId}', '${p.name.replace(/'/g, "\\'")}')" class="${i % 2 === 0 ? 'bg-slate-50 dark:bg-slate-900/40' : 'bg-white dark:bg-slate-950/40'} hover:bg-indigo-500/10 cursor-pointer transition">
                     <td class="py-1.5 px-2 font-mono text-slate-500 dark:text-slate-400 font-semibold">${i + 1}</td>
                     <td class="py-1.5 px-2 font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                         ${getTeamLogoHtml(p.team, "w-3.5 h-3.5")}
@@ -576,7 +628,7 @@
                 `;
             } else {
                 bottomTbody.innerHTML = bottom10.map((p, i) => `
-                    <tr class="${i % 2 === 0 ? 'bg-slate-50 dark:bg-slate-900/40' : 'bg-white dark:bg-slate-950/40'} hover:bg-slate-100 dark:hover:bg-slate-800/80 transition">
+                    <tr onclick="scrollToGame('${p.gameId}', '${p.name.replace(/'/g, "\\'")}')" class="${i % 2 === 0 ? 'bg-slate-50 dark:bg-slate-900/40' : 'bg-white dark:bg-slate-950/40'} hover:bg-rose-500/10 cursor-pointer transition">
                         <td class="py-1.5 px-2 font-mono text-slate-500 dark:text-slate-400 font-semibold">${i + 1}</td>
                         <td class="py-1.5 px-2 font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                             ${getTeamLogoHtml(p.team, "w-3.5 h-3.5")}
@@ -589,6 +641,129 @@
                         <td class="py-1.5 px-2 text-right font-black text-rose-600 dark:text-rose-400 font-mono">${p.gmSc}</td>
                     </tr>
                 `).join('');
+            }
+        }
+
+        function closePlayerModal() {
+            const modal = document.getElementById('player-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        async function openPlayerModal(playerId, shortName, fullName, teamAbbrev) {
+            const modal = document.getElementById('player-modal');
+            const avatarEl = document.getElementById('modal-player-avatar');
+            const nameEl = document.getElementById('modal-player-name');
+            const badgeEl = document.getElementById('modal-player-badge');
+            const metaEl = document.getElementById('modal-player-meta');
+            const bodyEl = document.getElementById('modal-player-body');
+            const espnLink = document.getElementById('modal-espn-link');
+
+            const displayName = fullName || shortName || 'Player';
+            nameEl.textContent = displayName;
+            badgeEl.textContent = teamAbbrev || 'NBA';
+            metaEl.textContent = 'Fetching season profile...';
+            
+            // Link directly to the player's official ESPN game log page
+            if (playerId) {
+                espnLink.href = `https://www.espn.com/nba/player/gamelog/_/id/${playerId}`;
+            } else {
+                espnLink.href = `https://www.espn.com/nba/players`;
+            }
+
+            if (playerId) {
+                avatarEl.innerHTML = `<img src="https://a.espncdn.com/i/headshots/nba/players/full/${playerId}.png" alt="${displayName}" class="w-full h-full object-cover object-top" onerror="this.style.display='none'">`;
+            } else {
+                avatarEl.innerHTML = `<i data-lucide="user" class="w-6 h-6 text-slate-400"></i>`;
+            }
+
+            bodyEl.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-10 text-slate-500 dark:text-slate-400 gap-2">
+                    <div class="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span>Loading player stats...</span>
+                </div>
+            `;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            if (window.lucide) lucide.createIcons();
+
+            if (!playerId) {
+                metaEl.textContent = 'Detailed profile unavailable for this player';
+                bodyEl.innerHTML = `<p class="text-center text-slate-500 py-6">No ESPN athlete ID available for this entry.</p>`;
+                return;
+            }
+
+            try {
+                const [bioRes, overviewRes, gamelogRes] = await Promise.all([
+                    fetch(`https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba/athletes/${playerId}`),
+                    fetch(`https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba/athletes/${playerId}/overview`),
+                    fetch(`https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba/athletes/${playerId}/gamelog`)
+                ]);
+
+                const bioData = bioRes.ok ? await bioRes.json() : null;
+                const overviewData = overviewRes.ok ? await overviewRes.json() : null;
+                const gamelogData = gamelogRes.ok ? await gamelogRes.json() : null;
+
+                const athlete = bioData && bioData.athlete ? bioData.athlete : null;
+                if (athlete) {
+                    if (athlete.displayName) nameEl.textContent = athlete.displayName;
+                    const parts = [];
+                    if (athlete.jersey) parts.push(`#${athlete.jersey}`);
+                    if (athlete.position && athlete.position.abbreviation) parts.push(athlete.position.abbreviation);
+                    if (athlete.displayHeight) parts.push(athlete.displayHeight);
+                    if (athlete.displayWeight) parts.push(athlete.displayWeight);
+                    if (athlete.age) parts.push(`Age ${athlete.age}`);
+                    metaEl.textContent = parts.length > 0 ? parts.join(' • ') : (teamAbbrev || 'NBA Player');
+                } else {
+                    metaEl.textContent = `${teamAbbrev || 'NBA'} Player`;
+                }
+
+                let seasonHtml = '';
+                const statsBlock = overviewData && overviewData.statistics ? overviewData.statistics : null;
+                if (statsBlock && statsBlock.labels && statsBlock.splits && statsBlock.splits.length > 0) {
+                    const labels = statsBlock.labels;
+                    const regSplit = statsBlock.splits.find(s => s.displayName && s.displayName.toLowerCase().includes('regular')) || statsBlock.splits[0];
+                    const vals = regSplit && regSplit.stats ? regSplit.stats : [];
+
+                    const wantedKeys = ['GP', 'MIN', 'PTS', 'REB', 'AST', 'STL', 'BLK', 'FG%', '3P%', 'FT%'];
+                    const cards = wantedKeys.map(key => {
+                        const idx = labels.indexOf(key);
+                        const val = idx !== -1 && vals[idx] !== undefined ? vals[idx] : '-';
+                        return `
+                            <div class="bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-center">
+                                <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">${key}</div>
+                                <div class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white mt-0.5 font-mono">${val}</div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    seasonHtml = `
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Current Season Averages</h4>
+                                <span class="text-[10px] text-slate-400">${regSplit.displayName || 'Regular Season'}</span>
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                                ${cards}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (!seasonHtml) {
+                    bodyEl.innerHTML = `<p class="text-center text-slate-500 py-8">No season statistics available for this player.</p>`;
+                } else {
+                    bodyEl.innerHTML = `
+                        <div class="space-y-6 py-2">
+                            ${seasonHtml}
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                console.error('Error loading player profile:', err);
+                metaEl.textContent = `${teamAbbrev || 'NBA'} Player`;
+                bodyEl.innerHTML = `<p class="text-center text-rose-500 py-6">Unable to fetch live player stats right now. Try the ESPN Game Log link below.</p>`;
             }
         }
 
@@ -616,7 +791,6 @@
                 gameCard.id = `game-card-${game.id}`;
                 gameCard.className = `bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-md overflow-hidden transition-all duration-200`;
 
-                // Calculate top performer by GameScore for each team
                 const getTopPerformer = (players) => {
                     if (!players || players.length === 0) return null;
                     return [...players].sort((a, b) => b.gmSc - a.gmSc)[0];
@@ -630,7 +804,7 @@
                         
                         <div class="w-full flex items-center justify-between gap-2 sm:gap-4 max-w-6xl mx-auto">
                             
-                            <!-- 1. Away Top Performer Badge (Fixed Width Slot) -->
+                            <!-- 1. Away Top Performer Badge -->
                             <div class="hidden lg:flex w-36 flex-shrink-0 items-center justify-start">
                                 ${awayTop ? `
                                     <div class="w-full flex flex-col items-start px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 h-[58px] justify-between shadow-sm">
@@ -671,7 +845,7 @@
                                 <span class="sm:hidden font-bold text-slate-900 dark:text-white text-sm">${game.homeTeam.abbrev}</span>
                             </div>
 
-                            <!-- 5. Home Top Performer Badge (Fixed Width Slot) -->
+                            <!-- 5. Home Top Performer Badge -->
                             <div class="hidden lg:flex w-36 flex-shrink-0 items-center justify-end">
                                 ${homeTop ? `
                                     <div class="w-full flex flex-col items-start px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 h-[58px] justify-between shadow-sm">
@@ -704,7 +878,6 @@
             lucide.createIcons();
         }
 
-        // Render compact Quarter-by-Quarter Linescore table
         function renderQuarterLinescore(game) {
             const awayLines = game.awayTeam.linescores || [];
             const homeLines = game.homeTeam.linescores || [];
@@ -750,7 +923,6 @@
             `;
         }
 
-        // Global sort state per team/game table
         const tableSortState = {};
 
         function sortTeamTable(gameId, teamAbbrev, columnKey) {
@@ -823,34 +995,32 @@
                                     let rowBgClass = idx % 2 === 0 ? "bg-white dark:bg-slate-900" : "bg-slate-50 dark:bg-slate-950/70";
 
                                     if (p.gmSc >= 40) {
-                                        // 40+ Historic Performance
                                         gmScClass = "text-emerald-950 dark:text-emerald-100 font-black text-sm drop-shadow";
                                         rowBgClass = "bg-emerald-300/90 dark:bg-emerald-950 border-l-4 border-l-amber-400 dark:border-l-amber-400 shadow-inner";
                                     } else if (p.gmSc >= 30) {
-                                        // 30-40 Outstanding / Superstar
                                         gmScClass = "text-emerald-900 dark:text-emerald-200 font-black text-xs";
                                         rowBgClass = "bg-emerald-200/80 dark:bg-emerald-950/80 border-l-4 border-l-emerald-500 dark:border-l-emerald-400";
                                     } else if (p.gmSc >= 20) {
-                                        // 20-30 Excellent
                                         gmScClass = "text-emerald-800 dark:text-emerald-300 font-extrabold";
                                         rowBgClass = "bg-emerald-100/70 dark:bg-emerald-950/50 border-l-4 border-l-emerald-400/70 dark:border-l-emerald-500/70";
                                     } else if (p.gmSc >= 10) {
-                                        // 10-20 Solid / Average Starter
                                         gmScClass = "text-emerald-700 dark:text-emerald-400 font-bold";
                                         rowBgClass = "bg-emerald-50/50 dark:bg-emerald-950/20";
                                     } else if (p.gmSc >= 0) {
-                                        // 0-10 Below Average
                                         gmScClass = "text-rose-700 dark:text-rose-400 font-bold";
                                         rowBgClass = "bg-rose-50/40 dark:bg-rose-950/20";
                                     } else {
-                                        // Negative (<0) Rough Game
                                         gmScClass = "text-rose-950 dark:text-rose-200 font-black";
                                         rowBgClass = "bg-rose-200/80 dark:bg-rose-950/80 border-l-4 border-l-rose-500 dark:border-l-rose-400 shadow-inner";
                                     }
 
                                     return `
-                                        <tr class="${rowBgClass} hover:bg-amber-100 dark:hover:bg-slate-800 transition-colors duration-150">
-                                            <td class="py-2.5 px-3 font-sans font-bold text-slate-950 dark:text-white">${p.name}</td>
+                                        <tr data-player-name="${p.name.replace(/"/g, '&quot;')}" class="${rowBgClass} hover:bg-amber-100 dark:hover:bg-slate-800 transition-colors duration-150">
+                                            <td class="py-2.5 px-3 font-sans font-bold text-slate-950 dark:text-white">
+                                                <button type="button" onclick="openPlayerModal('${p.id || ''}', '${p.name.replace(/'/g, "\\'")}', '${(p.fullName || p.name).replace(/'/g, "\\'")}', '${team.abbrev}')" class="hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline text-left">
+                                                    ${p.name}
+                                                </button>
+                                            </td>
                                             <td class="py-2.5 px-2 text-center font-semibold text-slate-700 dark:text-slate-300">${p.min}'</td>
                                             <td class="py-2.5 px-2 text-right font-black text-slate-950 dark:text-white">${p.pts}</td>
                                             <td class="py-2.5 px-2 text-right font-medium text-slate-900 dark:text-slate-200">${p.reb}</td>
@@ -977,7 +1147,9 @@
             teamGroup.statistics[0].athletes.forEach(ath => {
                 if (!ath.stats || ath.didNotPlay) return;
 
+                const id = ath.athlete.id || '';
                 const name = ath.athlete.shortName || ath.athlete.displayName;
+                const fullName = ath.athlete.displayName || name;
                 const min = parseInt(ath.stats[idxMin] || 0);
                 const pts = parseInt(ath.stats[idxPts] || 0);
                 const reb = parseInt(ath.stats[idxReb] || 0);
@@ -999,108 +1171,18 @@
 
                 const tov = parseInt(ath.stats[idxTov] || 0);
                 const plusMinus = parseInt(ath.stats[idxPm] || 0);
-                const oreb = parseInt(ath.stats[idxOreb] || Math.round(reb * 0.3));
-                const dreb = parseInt(ath.stats[idxDreb] || Math.round(reb * 0.7));
+                const oreb = idxOreb !== -1 ? parseInt(ath.stats[idxOreb] || 0) : Math.round(reb * 0.3);
+                const dreb = idxDreb !== -1 ? parseInt(ath.stats[idxDreb] || 0) : Math.round(reb * 0.7);
                 const pf = parseInt(ath.stats[idxPf] || 0);
 
                 const gmSc = calculateGameScore({ pts, fgm, fga, ftm, fta, oreb, dreb, stl, ast, blk, pf, tov });
 
                 players.push({
-                    name, min, pts, reb, ast, stl, blk, fgm, fga, tpm, tpa, ftm, fta, tov, pf, plusMinus, gmSc
+                    id, name, fullName, min, pts, reb, ast, stl, blk, fgm, fga, tpm, tpa, ftm, fta, tov, pf, plusMinus, gmSc
                 });
             });
 
             return players;
-        }
-
-        function parseEspnScoreboardEvent(evt) {
-            const competition = evt.competitions[0];
-            const home = competition.competitors.find(c => c.homeAway === 'home');
-            const away = competition.competitors.find(c => c.homeAway === 'away');
-            const statusText = evt.status.type.shortDetail || evt.status.type.detail || 'FINAL';
-
-            return {
-                id: evt.id,
-                status: statusText.toUpperCase(),
-                awayTeam: {
-                    name: away.team.displayName,
-                    abbrev: away.team.abbreviation,
-                    score: parseInt(away.score || 0),
-                    record: away.records && away.records[0] ? away.records[0].summary : '',
-                    players: generateMockPlayers(away.team.abbreviation)
-                },
-                homeTeam: {
-                    name: home.team.displayName,
-                    abbrev: home.team.abbreviation,
-                    score: parseInt(home.score || 0),
-                    record: home.records && home.records[0] ? home.records[0].summary : '',
-                    players: generateMockPlayers(home.team.abbreviation)
-                }
-            };
-        }
-
-        function generateMockGames(dateStr) {
-            const matchups = [
-                { away: { name: 'Milwaukee Bucks', abbrev: 'MIL', record: '1-10' }, home: { name: 'New York Knicks', abbrev: 'NY', record: '6-4' }, awayScore: 85, homeScore: 117, status: 'FINAL' },
-                { away: { name: 'Boston Celtics', abbrev: 'BOS', record: '9-2' }, home: { name: 'Philadelphia 76ers', abbrev: 'PHI', record: '9-3' }, awayScore: 123, homeScore: 101, status: 'FINAL' },
-                { away: { name: 'LA Clippers', abbrev: 'LAC', record: '2-7' }, home: { name: 'Phoenix Suns', abbrev: 'PHX', record: '3-6' }, awayScore: 59, homeScore: 89, status: '4:36 - 3RD' },
-                { away: { name: 'Miami Heat', abbrev: 'MIA', record: '4-6' }, home: { name: 'Utah Jazz', abbrev: 'UTAH', record: '1-9' }, awayScore: 64, homeScore: 58, status: '10:08 - 3RD' },
-                { away: { name: 'Golden State Warriors', abbrev: 'GSW', record: '8-3' }, home: { name: 'Denver Nuggets', abbrev: 'DEN', record: '7-3' }, awayScore: 0, homeScore: 0, status: '10:00 PM ET' }
-            ];
-
-            return matchups.map((m, idx) => ({
-                id: `mock-game-${idx}`,
-                status: m.status,
-                awayTeam: {
-                    ...m.away,
-                    score: m.awayScore,
-                    players: generateMockPlayers(m.away.abbrev)
-                },
-                homeTeam: {
-                    ...m.home,
-                    score: m.homeScore,
-                    players: generateMockPlayers(m.home.abbrev)
-                }
-            }));
-        }
-
-        function generateMockPlayers(teamCode) {
-            const rosterPools = {
-                'MIL': ["G. Antetokounmpo", "D. Lillard", "K. Middleton", "B. Lopez", "B. Portis"],
-                'NY': ["J. Brunson", "K. Towns", "O. Anunoby", "M. Bridges", "J. Hart"],
-                'BOS': ["J. Tatum", "J. Brown", "D. White", "J. Holiday", "A. Horford"],
-                'PHI': ["J. Embiid", "P. George", "T. Maxey", "K. Oubre Jr.", "C. Martin"],
-                'LAC': ["J. Harden", "K. Leonard", "I. Zubac", "N. Powell", "T. Mann"],
-                'PHX': ["K. Durant", "D. Booker", "B. Beal", "J. Nurkic", "T. Jones"],
-                'MIA': ["J. Butler", "B. Adebayo", "T. Herro", "T. Rozier", "N. Jovic"],
-                'UTAH': ["L. Markkanen", "J. Clarkson", "C. Sexton", "J. Collins", "K. George"],
-                'GSW': ["S. Curry", "D. Green", "A. Wiggins", "J. Kuminga", "B. Hield"],
-                'DEN': ["N. Jokic", "J. Murray", "A. Gordon", "M. Porter Jr.", "R. Westbrook"]
-            };
-
-            const names = rosterPools[teamCode] || ["Player A", "Player B", "Player C", "Player D", "Player E", "Player F", "Player G"];
-
-            return names.map((name, i) => {
-                const min = i < 5 ? 28 + Math.floor(Math.random() * 8) : 12 + Math.floor(Math.random() * 10);
-                const pts = i === 0 ? 28 + Math.floor(Math.random() * 10) : i === 1 ? 18 + Math.floor(Math.random() * 8) : Math.floor(Math.random() * 12);
-                const reb = Math.floor(Math.random() * 8);
-                const ast = Math.floor(Math.random() * 6);
-                const stl = Math.floor(Math.random() * 3);
-                const blk = Math.floor(Math.random() * 2);
-                const fgm = Math.floor(pts / 2.2);
-                const fga = fgm + Math.floor(Math.random() * 5);
-                const tpm = Math.floor(Math.random() * 4);
-                const tpa = tpm + Math.floor(Math.random() * 3);
-                const ftm = Math.floor(Math.random() * 5);
-                const fta = ftm + Math.floor(Math.random() * 2);
-                const tov = Math.floor(Math.random() * 4);
-                const pf = Math.floor(Math.random() * 4);
-                const plusMinus = Math.floor(Math.random() * 24) - 12;
-
-                const gmSc = calculateGameScore({ pts, fgm, fga, ftm, fta, oreb: 2, dreb: reb, stl, ast, blk, pf, tov });
-
-                return { name, min, pts, reb, ast, stl, blk, fgm, fga, tpm, tpa, ftm, fta, tov, pf, plusMinus, gmSc };
-            });
         }
     </script>
 </body>
