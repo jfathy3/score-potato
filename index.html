@@ -91,6 +91,11 @@
                     <button id="btn-next-day" title="Next Day" class="p-1 sm:p-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-md hover:bg-slate-300 dark:hover:bg-slate-700 transition">
                         <i data-lucide="chevron-right" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                     </button>
+
+                    <!-- Today Quick-Jump Button -->
+                    <button id="btn-today" title="Jump to Today" class="ml-0.5 px-2 py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-slate-700 rounded-md border border-slate-300/80 dark:border-slate-700 transition">
+                        Today
+                    </button>
                 </div>
 
                 <!-- Expand/Collapse All Toggle -->
@@ -442,6 +447,15 @@
                 state.selectedDate = date.toISOString().split('T')[0];
                 datePicker.value = state.selectedDate;
                 fetchSlateData(state.selectedDate);
+            });
+
+            document.getElementById('btn-today').addEventListener('click', () => {
+                const todayStr = getTodayNYString();
+                if (state.selectedDate !== todayStr) {
+                    state.selectedDate = todayStr;
+                    datePicker.value = state.selectedDate;
+                    fetchSlateData(state.selectedDate);
+                }
             });
 
             document.getElementById('btn-toggle-all-games').addEventListener('click', () => {
@@ -1172,6 +1186,27 @@
                 return sortConfig.direction === 'desc' ? ' ▼' : ' ▲';
             };
 
+            // Aggregate Team Totals & Shooting Percentages
+            const totals = team.players.reduce((acc, p) => {
+                acc.pts += p.pts || 0;
+                acc.reb += p.reb || 0;
+                acc.ast += p.ast || 0;
+                acc.stl += p.stl || 0;
+                acc.blk += p.blk || 0;
+                acc.fgm += p.fgm || 0;
+                acc.fga += p.fga || 0;
+                acc.tpm += p.tpm || 0;
+                acc.tpa += p.tpa || 0;
+                acc.ftm += p.ftm || 0;
+                acc.fta += p.fta || 0;
+                acc.tov += p.tov || 0;
+                return acc;
+            }, { pts: 0, reb: 0, ast: 0, stl: 0, blk: 0, fgm: 0, fga: 0, tpm: 0, tpa: 0, ftm: 0, fta: 0, tov: 0 });
+
+            const fgPct = totals.fga > 0 ? Math.round((totals.fgm / totals.fga) * 100) : 0;
+            const tpPct = totals.tpa > 0 ? Math.round((totals.tpm / totals.tpa) * 100) : 0;
+            const ftPct = totals.fta > 0 ? Math.round((totals.ftm / totals.fta) * 100) : 0;
+
             return `
                 <div>
                     <div class="flex items-center justify-between mb-2 px-1">
@@ -1254,6 +1289,40 @@
                                     `;
                                 }).join('')}
                             </tbody>
+                            ${team.players.length > 0 ? `
+                            <tfoot class="bg-slate-100/90 dark:bg-slate-950 border-t-2 border-slate-300 dark:border-slate-700 font-mono text-slate-900 dark:text-white font-bold divide-y divide-slate-200/80 dark:divide-slate-800/80">
+                                <tr>
+                                    <td class="py-2 px-3 font-sans text-[11px] uppercase tracking-wider">Team Totals</td>
+                                    <td class="py-2 px-2 text-center text-slate-400">—</td>
+                                    <td class="py-2 px-2 text-right font-black">${totals.pts}</td>
+                                    <td class="py-2 px-2 text-right">${totals.reb}</td>
+                                    <td class="py-2 px-2 text-right">${totals.ast}</td>
+                                    <td class="py-2 px-2 text-right">${totals.stl}</td>
+                                    <td class="py-2 px-2 text-right">${totals.blk}</td>
+                                    <td class="py-2 px-2 text-right">${totals.fgm}-${totals.fga}</td>
+                                    <td class="py-2 px-2 text-right">${totals.tpm}-${totals.tpa}</td>
+                                    <td class="py-2 px-2 text-right">${totals.ftm}-${totals.fta}</td>
+                                    <td class="py-2 px-2 text-right">${totals.tov}</td>
+                                    <td class="py-2 px-2 text-right text-slate-400">—</td>
+                                    <td class="py-2 px-3 text-right text-slate-400">—</td>
+                                </tr>
+                                <tr class="bg-slate-50/80 dark:bg-slate-900/60 text-[11px]">
+                                    <td class="py-1.5 px-3 font-sans text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Shooting %</td>
+                                    <td class="py-1.5 px-2 text-center text-slate-400">—</td>
+                                    <td class="py-1.5 px-2 text-right text-slate-400">—</td>
+                                    <td class="py-1.5 px-2 text-right text-slate-400">—</td>
+                                    <td class="py-1.5 px-2 text-right text-slate-400">—</td>
+                                    <td class="py-1.5 px-2 text-right text-slate-400">—</td>
+                                    <td class="py-1.5 px-2 text-right text-slate-400">—</td>
+                                    <td class="py-1.5 px-2 text-right font-extrabold text-indigo-600 dark:text-indigo-400">${fgPct}%</td>
+                                    <td class="py-1.5 px-2 text-right font-extrabold text-indigo-600 dark:text-indigo-400">${tpPct}%</td>
+                                    <td class="py-1.5 px-2 text-right font-extrabold text-indigo-600 dark:text-indigo-400">${ftPct}%</td>
+                                    <td class="py-1.5 px-2 text-right text-slate-400">—</td>
+                                    <td class="py-1.5 px-2 text-right text-slate-400">—</td>
+                                    <td class="py-1.5 px-3 text-right text-slate-400">—</td>
+                                </tr>
+                            </tfoot>
+                            ` : ''}
                         </table>
                     </div>
                 </div>
