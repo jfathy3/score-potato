@@ -481,6 +481,27 @@
             });
         }
 
+        function toggleGameCard(gameId) {
+            if (state.expandedGames.has(gameId)) {
+                state.expandedGames.delete(gameId);
+            } else {
+                state.expandedGames.add(gameId);
+            }
+            renderGames();
+        }
+
+        function updateLeaderboardVisibility() {
+            const content = document.getElementById('leaderboard-content');
+            const chevron = document.getElementById('icon-leaderboard-chevron');
+            if (state.isLeaderboardExpanded) {
+                content.classList.remove('hidden');
+                chevron.classList.add('rotate-180');
+            } else {
+                content.classList.add('hidden');
+                chevron.classList.remove('rotate-180');
+            }
+        }
+
         function closeStandingsModal() {
             const modal = document.getElementById('standings-modal');
             modal.classList.add('hidden');
