@@ -67,6 +67,12 @@
             <!-- Date Controls & Controls Header -->
             <div class="flex items-center gap-1.5 sm:gap-3 ml-auto sm:ml-0">
                 
+                <!-- Standings Modal Trigger Button -->
+                <button id="btn-open-standings" title="View NBA Standings" class="px-2.5 sm:px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-[11px] sm:text-xs font-semibold rounded-lg border border-indigo-200 dark:border-indigo-800/70 transition flex items-center gap-1.5">
+                    <i data-lucide="list-ordered" class="w-3.5 h-3.5"></i>
+                    <span>Standings</span>
+                </button>
+
                 <!-- Theme Toggle Button -->
                 <button id="btn-theme-toggle" title="Toggle Light/Dark Mode" class="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition border border-slate-300 dark:border-slate-700">
                     <i id="icon-theme-sun" data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
@@ -110,7 +116,7 @@
             </div>
 
             <!-- Horizontal Mini Scoreboard Strip -->
-            <div id="mini-scoreboard-strip" class="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-thin">
+            <div id="mini-scoreboard-strip" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
                 <!-- Mini Scoreboard Chips injected via JS -->
             </div>
         </section>
@@ -239,6 +245,41 @@
         </div>
 
     </main>
+
+    <!-- NBA Standings Modal -->
+    <div id="standings-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-6 bg-slate-950/70 backdrop-blur-sm transition-opacity">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
+            <!-- Modal Header -->
+            <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/60">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                        <i data-lucide="list-ordered" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white leading-tight">NBA Conference Standings</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Live Regular Season Standings • Playoff & Play-In Seeds</p>
+                    </div>
+                </div>
+                <button id="btn-close-standings" title="Close (Esc)" class="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div id="standings-modal-body" class="p-4 sm:p-6 overflow-y-auto space-y-6 text-xs">
+                <!-- Standings tables injected dynamically -->
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-5 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-0.5 bg-emerald-500 inline-block"></span> Top 6: Guaranteed Playoffs</span>
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-0.5 bg-amber-500 inline-block"></span> Seeds 7–10: Play-In Tournament</span>
+                </div>
+                <span>Click outside or press <kbd class="px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded font-mono text-[10px]">Esc</kbd> to close</span>
+            </div>
+        </div>
+    </div>
 
     <!-- Player Quick-View Modal -->
     <div id="player-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-6 bg-slate-950/70 backdrop-blur-sm transition-opacity">
@@ -423,31 +464,151 @@
             playerModal.addEventListener('click', (e) => {
                 if (e.target === playerModal) closePlayerModal();
             });
+
+            // Standings Modal Handlers
+            const standingsModal = document.getElementById('standings-modal');
+            document.getElementById('btn-open-standings').addEventListener('click', openStandingsModal);
+            document.getElementById('btn-close-standings').addEventListener('click', closeStandingsModal);
+            standingsModal.addEventListener('click', (e) => {
+                if (e.target === standingsModal) closeStandingsModal();
+            });
+
             document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && !playerModal.classList.contains('hidden')) {
-                    closePlayerModal();
+                if (e.key === 'Escape') {
+                    if (!playerModal.classList.contains('hidden')) closePlayerModal();
+                    if (!standingsModal.classList.contains('hidden')) closeStandingsModal();
                 }
             });
         }
 
-        function toggleGameCard(gameId) {
-            if (state.expandedGames.has(gameId)) {
-                state.expandedGames.delete(gameId);
-            } else {
-                state.expandedGames.add(gameId);
-            }
-            renderGames();
+        function closeStandingsModal() {
+            const modal = document.getElementById('standings-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
         }
 
-        function updateLeaderboardVisibility() {
-            const content = document.getElementById('leaderboard-content');
-            const chevron = document.getElementById('icon-leaderboard-chevron');
-            if (state.isLeaderboardExpanded) {
-                content.classList.remove('hidden');
-                chevron.classList.add('rotate-180');
-            } else {
-                content.classList.add('hidden');
-                chevron.classList.remove('rotate-180');
+        async function openStandingsModal() {
+            const modal = document.getElementById('standings-modal');
+            const bodyEl = document.getElementById('standings-modal-body');
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            bodyEl.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-12 text-slate-500 dark:text-slate-400 gap-2">
+                    <div class="w-7 h-7 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span>Fetching live NBA standings...</span>
+                </div>
+            `;
+
+            try {
+                const res = await fetch('https://site.web.api.espn.com/apis/v2/sports/basketball/nba/standings');
+                if (!res.ok) throw new Error('Failed to load standings');
+                const data = await res.json();
+
+                if (!data || !data.children || data.children.length === 0) {
+                    bodyEl.innerHTML = `<p class="text-center text-slate-500 py-8">No standings data available right now.</p>`;
+                    return;
+                }
+
+                // Sort so Eastern Conference appears first (or side-by-side cleanly)
+                const conferences = [...data.children].sort((a, b) => a.name.localeCompare(b.name));
+
+                const confHtml = conferences.map(conf => {
+                    const entries = (conf.standings && conf.standings.entries) ? [...conf.standings.entries] : [];
+                    
+                    // Parse stats helper for each team entry
+                    const parsedTeams = entries.map(entry => {
+                        const team = entry.team || {};
+                        const statsMap = {};
+                        (entry.stats || []).forEach(s => {
+                            statsMap[s.name] = s.displayValue ?? s.value;
+                            if (s.name === 'playoffSeed') statsMap.seedNum = parseInt(s.value || 99);
+                            if (s.name === 'winPercent') statsMap.winPctNum = parseFloat(s.value || 0);
+                        });
+
+                        return {
+                            abbrev: team.abbreviation || 'NBA',
+                            name: team.shortDisplayName || team.displayName || team.name || 'Team',
+                            seed: statsMap.seedNum || 99,
+                            wins: statsMap.wins ?? '0',
+                            losses: statsMap.losses ?? '0',
+                            pct: statsMap.winPercent ?? '.000',
+                            gb: statsMap.gamesBehind ?? '-',
+                            streak: statsMap.streak ?? '-',
+                            last10: statsMap['Last Ten Games'] ?? statsMap.lastTen ?? '-',
+                            winPctNum: statsMap.winPctNum || 0
+                        };
+                    });
+
+                    // Sort by playoffSeed if valid, otherwise by win%
+                    parsedTeams.sort((a, b) => {
+                        if (a.seed !== b.seed) return a.seed - b.seed;
+                        return b.winPctNum - a.winPctNum;
+                    });
+
+                    return `
+                        <div class="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
+                            <div class="px-4 py-2.5 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                                <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-200">${conf.name}</h4>
+                                <span class="text-[10px] font-mono text-slate-400">W - L</span>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs whitespace-nowrap">
+                                    <thead class="bg-white dark:bg-slate-950 text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                                        <tr>
+                                            <th class="py-2 px-2.5 text-center w-8">#</th>
+                                            <th class="py-2 px-2">Team</th>
+                                            <th class="py-2 px-2 text-right">W</th>
+                                            <th class="py-2 px-2 text-right">L</th>
+                                            <th class="py-2 px-2 text-right">PCT</th>
+                                            <th class="py-2 px-2 text-right">GB</th>
+                                            <th class="py-2 px-2.5 text-right">STRK</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/40 font-mono">
+                                        ${parsedTeams.map((t, idx) => {
+                                            const rank = idx + 1;
+                                            let cutoffBorder = '';
+                                            if (rank === 6) cutoffBorder = 'border-b-2 border-b-emerald-500/70';
+                                            if (rank === 10) cutoffBorder = 'border-b-2 border-b-amber-500/70';
+
+                                            const strkColor = String(t.streak).startsWith('W')
+                                                ? 'text-emerald-600 dark:text-emerald-400 font-bold'
+                                                : String(t.streak).startsWith('L')
+                                                    ? 'text-rose-600 dark:text-rose-400 font-bold'
+                                                    : 'text-slate-500';
+
+                                            return `
+                                                <tr class="${cutoffBorder} ${rank > 10 ? 'opacity-70' : ''} hover:bg-slate-100 dark:hover:bg-slate-800/60 transition">
+                                                    <td class="py-2 px-2.5 text-center font-bold ${rank <= 6 ? 'text-emerald-600 dark:text-emerald-400' : rank <= 10 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'}">${rank}</td>
+                                                    <td class="py-2 px-2 font-sans font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                                        ${getTeamLogoHtml(t.abbrev, "w-4 h-4 flex-shrink-0")}
+                                                        <span>${t.name}</span>
+                                                    </td>
+                                                    <td class="py-2 px-2 text-right font-bold text-slate-800 dark:text-slate-200">${t.wins}</td>
+                                                    <td class="py-2 px-2 text-right text-slate-600 dark:text-slate-400">${t.losses}</td>
+                                                    <td class="py-2 px-2 text-right text-slate-700 dark:text-slate-300">${t.pct}</td>
+                                                    <td class="py-2 px-2 text-right text-slate-500 dark:text-slate-400">${t.gb}</td>
+                                                    <td class="py-2 px-2.5 text-right ${strkColor}">${t.streak}</td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                bodyEl.innerHTML = `
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        ${confHtml}
+                    </div>
+                `;
+            } catch (err) {
+                console.error('Standings fetch error:', err);
+                bodyEl.innerHTML = `<p class="text-center text-rose-500 py-8">Unable to fetch live standings right now. Please try again shortly.</p>`;
             }
         }
 
@@ -509,28 +670,59 @@
             strip.innerHTML = '';
 
             if (state.games.length === 0) {
-                strip.innerHTML = `<span class="text-xs text-slate-500">No games scheduled for this date.</span>`;
+                strip.innerHTML = `<span class="col-span-full text-xs text-slate-500">No games scheduled for this date.</span>`;
                 return;
             }
 
             state.games.forEach(game => {
+                const isFinal = game.status.includes('FINAL');
+                const isScheduled = game.status.includes('ET') || game.status.includes('PM') || game.status.includes('AM') || game.status.includes('SCHEDULED');
+                const isLive = !isFinal && !isScheduled;
+
+                const awayWon = !isScheduled && game.awayTeam.score > game.homeTeam.score;
+                const homeWon = !isScheduled && game.homeTeam.score > game.awayTeam.score;
+
                 const chip = document.createElement('button');
-                chip.className = `flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950/80 hover:bg-slate-200 dark:hover:bg-slate-800 hover:border-indigo-500/50 transition cursor-pointer flex-shrink-0 text-xs shadow-sm`;
+                chip.className = `flex flex-col justify-between p-2.5 rounded-xl border ${
+                    isLive
+                        ? 'border-emerald-500/50 bg-emerald-500/5 dark:bg-emerald-950/20'
+                        : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/70'
+                } hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:border-indigo-500/50 transition cursor-pointer text-xs shadow-sm text-left`;
                 chip.onclick = () => scrollToGame(game.id);
 
+                const statusBadge = isLive
+                    ? `<span class="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                           <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                           ${game.status}
+                       </span>`
+                    : `<span class="text-[10px] font-mono font-semibold ${isFinal ? 'text-slate-500 dark:text-slate-400' : 'text-indigo-600 dark:text-indigo-400'}">${game.status}</span>`;
+
                 chip.innerHTML = `
-                    <div class="flex items-center gap-1.5">
-                        ${getTeamLogoHtml(game.awayTeam.abbrev, "w-4 h-4")}
-                        <span class="font-semibold text-slate-700 dark:text-slate-300">${game.awayTeam.abbrev}</span>
-                        <span class="font-bold text-slate-900 dark:text-slate-100">${game.awayTeam.score}</span>
+                    <div class="flex items-center justify-between mb-1.5 pb-1 border-b border-slate-200/70 dark:border-slate-800/70">
+                        ${statusBadge}
                     </div>
-                    <span class="text-slate-400 dark:text-slate-600 font-bold">@</span>
-                    <div class="flex items-center gap-1.5">
-                        <span class="font-bold text-slate-900 dark:text-slate-100">${game.homeTeam.score}</span>
-                        <span class="font-semibold text-slate-700 dark:text-slate-300">${game.homeTeam.abbrev}</span>
-                        ${getTeamLogoHtml(game.homeTeam.abbrev, "w-4 h-4")}
+                    <div class="space-y-1">
+                        <!-- Away Team Row -->
+                        <div class="flex items-center justify-between gap-2 ${homeWon ? 'opacity-60' : ''}">
+                            <div class="flex items-center gap-1.5 min-w-0">
+                                ${getTeamLogoHtml(game.awayTeam.abbrev, "w-4 h-4 flex-shrink-0")}
+                                <span class="font-bold text-slate-900 dark:text-slate-100 truncate">${game.awayTeam.abbrev}</span>
+                            </div>
+                            <span class="font-mono ${awayWon ? 'font-black text-slate-950 dark:text-white' : 'font-semibold text-slate-600 dark:text-slate-400'}">
+                                ${isScheduled ? (game.awayTeam.record || '-') : game.awayTeam.score}
+                            </span>
+                        </div>
+                        <!-- Home Team Row -->
+                        <div class="flex items-center justify-between gap-2 ${awayWon ? 'opacity-60' : ''}">
+                            <div class="flex items-center gap-1.5 min-w-0">
+                                ${getTeamLogoHtml(game.homeTeam.abbrev, "w-4 h-4 flex-shrink-0")}
+                                <span class="font-bold text-slate-900 dark:text-slate-100 truncate">${game.homeTeam.abbrev}</span>
+                            </div>
+                            <span class="font-mono ${homeWon ? 'font-black text-slate-950 dark:text-white' : 'font-semibold text-slate-600 dark:text-slate-400'}">
+                                ${isScheduled ? (game.homeTeam.record || '-') : game.homeTeam.score}
+                            </span>
+                        </div>
                     </div>
-                    <span class="ml-1 text-[10px] px-1.5 py-0.5 rounded font-mono ${game.status.includes('FINAL') ? 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400' : 'bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold'}">${game.status}</span>
                 `;
 
                 strip.appendChild(chip);
